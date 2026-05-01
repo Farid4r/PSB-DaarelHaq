@@ -25,6 +25,7 @@ class Registration extends Model
     'gender',
     'status',
     'snap_token',
+    'admin_note', // --- Tambahan Baru ---
 ];
 
     public function user()

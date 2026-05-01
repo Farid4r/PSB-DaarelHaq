@@ -45,18 +45,28 @@ class AdminController extends Controller
     }
 
     // Menambahkan tipe 'string' pada $id
-public function updateStatus(Request $request, string $id)
-{
-    $registration = Registration::findOrFail($id);
-    $registration->update(['status' => $request->status]);
+    public function updateStatus(Request $request, string $id)
+    {
+        // 1. Tambahkan validasi untuk admin_note
+        $request->validate([
+            'status' => 'required|string',
+            'admin_note' => 'nullable|string' // Catatan boleh kosong
+        ]);
 
-    // Jika status diubah ke diterima atau ditolak, kirim email
-    if (in_array($request->status, ['accepted', 'rejected'])) {
-        Mail::to($registration->user->email)->send(new PengumumanHasilMail($registration));
+        $registration = Registration::findOrFail($id);
+        
+        // 2. Simpan status dan catatan admin ke database
+        $registration->status = $request->status;
+        $registration->admin_note = $request->admin_note;
+        $registration->save();
+
+        // 3. Logika pengiriman email (tetap dipertahankan)
+        if (in_array($request->status, ['accepted', 'rejected'])) {
+            Mail::to($registration->user->email)->send(new PengumumanHasilMail($registration));
+        }
+
+        return redirect()->back()->with('success', 'Status pendaftaran dan catatan berhasil diperbarui!');
     }
-
-    return redirect()->back()->with('success', 'Status diperbarui dan email notifikasi telah dikirim!');
-}
 
     // Fungsi untuk mendownload Excel
     public function exportExcel()
@@ -71,7 +81,7 @@ public function updateStatus(Request $request, string $id)
     }
     // Tambahkan di bagian atas:
 
-// ... di dalam class AdminController ...
+    // ... di dalam class AdminController ...
 
     // 1. Tampilan Pengaturan Sistem
     public function settings()

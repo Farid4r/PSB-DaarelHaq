@@ -4,6 +4,7 @@
 <div class="min-h-screen bg-surface p-8 lg:p-12">
     <div class="max-w-6xl mx-auto">
         
+        <!-- HEADER BAGIAN ATAS -->
         <div class="flex flex-wrap items-center justify-between gap-4 mb-8 border-b border-surface-container pb-6">
             <div>
                 <a href="{{ route('admin.dashboard') }}" class="text-sm font-bold text-on-surface/40 hover:text-primary mb-2 inline-flex items-center gap-2">
@@ -13,25 +14,21 @@
                 <p class="text-on-surface/60">No. Daftar: <span class="font-bold text-primary">{{ $registration->registration_number }}</span></p>
             </div>
             
+            <!-- Mengganti tombol dengan Badge Status Saat Ini -->
             <div class="bg-white p-4 rounded-xl border border-surface-container shadow-sm flex items-center gap-4">
-                <span class="text-sm font-bold text-on-surface/60">Ubah Status:</span>
-                <form action="{{ route('admin.update.status', $registration->id) }}" method="POST" class="flex gap-2">
-                    @csrf
-                    <button type="submit" name="status" value="verified" class="px-4 py-2 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 rounded-lg text-sm font-bold transition">
-                        Validasi Berkas
-                    </button>
-                    <button type="submit" name="status" value="accepted" class="px-4 py-2 bg-green-100 text-green-700 hover:bg-green-200 rounded-lg text-sm font-bold transition">
-                        Luluskan
-                    </button>
-                    <button type="submit" name="status" value="rejected" class="px-4 py-2 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg text-sm font-bold transition" onclick="return confirm('Yakin ingin MENOLAK santri ini?')">
-                        Tolak
-                    </button>
-                </form>
+                <span class="text-sm font-bold text-on-surface/60">Status Saat Ini:</span>
+                <span class="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg text-sm font-bold uppercase tracking-widest border border-gray-200">
+                    {{ $registration->status }}
+                </span>
             </div>
         </div>
 
         <div class="grid lg:grid-cols-3 gap-8">
+            
+            <!-- KOLOM KIRI (BIODATA & AKSI) -->
             <div class="lg:col-span-1 space-y-6">
+                
+                <!-- Kartu Biodata (Kode Aslimu) -->
                 <div class="bg-white p-6 rounded-2xl border border-surface-container shadow-sm">
                     <h3 class="font-display font-bold text-primary text-lg mb-4 border-b pb-2">Biodata Santri</h3>
                     <div class="space-y-4">
@@ -57,8 +54,42 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- KARTU BARU: FORM AKSI & REVISI -->
+                <div class="bg-white p-6 rounded-2xl border border-surface-container shadow-sm">
+                    <h3 class="font-display font-bold text-primary text-lg mb-4 border-b pb-2">Keputusan Admin</h3>
+                    
+                    <form action="{{ route('admin.update.status', $registration->id) }}" method="POST">
+                        @csrf
+                        
+                        <div class="mb-4">
+                            <label class="block text-xs font-bold text-on-surface/40 uppercase mb-2">Pilih Status Baru</label>
+                            <select name="status" id="statusSelect" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-primary focus:ring focus:ring-primary/20 text-sm">
+                                <option value="paid" {{ $registration->status == 'paid' ? 'selected' : '' }}>Menunggu Verifikasi</option>
+                                <option value="verified" {{ $registration->status == 'verified' ? 'selected' : '' }}>Validasi Berkas (Valid)</option>
+                                <option value="revision" {{ $registration->status == 'revision' ? 'selected' : '' }}>Revisi Berkas (Tidak Valid)</option>
+                                <option value="accepted" {{ $registration->status == 'accepted' ? 'selected' : '' }}>Luluskan</option>
+                                <option value="rejected" {{ $registration->status == 'rejected' ? 'selected' : '' }}>Tolak</option>
+                            </select>
+                        </div>
+
+                        <!-- Kotak Catatan (Hanya muncul jika 'revision' dipilih) -->
+                        <div id="noteContainer" class="mb-6 {{ $registration->status == 'revision' ? 'block' : 'hidden' }}">
+                            <div class="bg-red-50 border-l-4 border-red-500 p-3 rounded-r-lg">
+                                <label class="block text-xs font-bold text-red-700 uppercase mb-1">Catatan Revisi</label>
+                                <p class="text-[10px] text-red-600 mb-2 leading-tight">Beritahu santri berkas mana yang harus diperbaiki/diunggah ulang.</p>
+                                <textarea name="admin_note" rows="3" class="w-full border-red-300 rounded-lg shadow-sm focus:border-red-500 focus:ring focus:ring-red-500/20 text-sm" placeholder="Contoh: Pas foto kurang jelas, KTP blur...">{{ $registration->admin_note }}</textarea>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-primary text-white font-bold py-3 px-4 rounded-xl hover:bg-primary/90 transition shadow-sm text-sm">
+                            Simpan Keputusan
+                        </button>
+                    </form>
+                </div>
             </div>
 
+            <!-- KOLOM KANAN (DOKUMEN) -->
             <div class="lg:col-span-2">
                 <div class="bg-white p-6 rounded-2xl border border-surface-container shadow-sm">
                     <h3 class="font-display font-bold text-primary text-lg mb-6 border-b pb-2">Pengecekan Dokumen</h3>
@@ -99,4 +130,24 @@
         </div>
     </div>
 </div>
+
+<!-- SCRIPT UNTUK INTERAKSI FORM REVISI -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const statusSelect = document.getElementById('statusSelect');
+        const noteContainer = document.getElementById('noteContainer');
+
+        statusSelect.addEventListener('change', function() {
+            if (this.value === 'revision') {
+                // Tampilkan kotak teks jika Revisi dipilih
+                noteContainer.classList.remove('hidden');
+                noteContainer.classList.add('block');
+            } else {
+                // Sembunyikan kotak teks untuk status lain
+                noteContainer.classList.remove('block');
+                noteContainer.classList.add('hidden');
+            }
+        });
+    });
+</script>
 @endsection
