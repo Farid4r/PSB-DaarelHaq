@@ -36,7 +36,7 @@ class RegistrationController extends Controller
             // AMBIL BIAYA DARI SETTING (Default ke 150000 jika kosong)
             $fee = (int) Setting::get('registration_fee', 150000);
 
-            // Konfigurasi Midtrans (Sesuaikan dengan config/services.php atau config/midtrans.php milikmu)
+            // Konfigurasi Midtrans
             Config::$serverKey = config('midtrans.server_key') ?? config('services.midtrans.serverKey');
             Config::$isProduction = config('midtrans.is_production') ?? config('services.midtrans.isProduction');
             Config::$isSanitized = true;
@@ -45,7 +45,7 @@ class RegistrationController extends Controller
             $params = [
                 'transaction_details' => [
                     'order_id' => $registration->registration_number . '-' . time(), 
-                    'gross_amount' => $fee, // Menggunakan biaya dinamis dari dashboard admin
+                    'gross_amount' => $fee, 
                 ],
                 'customer_details' => [
                     'first_name' => $user->name,
@@ -134,12 +134,16 @@ class RegistrationController extends Controller
     // --- STEP 3: Unggah Berkas ---
     public function stepThree()
     {
-        $registration = Auth::user()->registration;
-        if (!$registration) return redirect()->route('register.step1');
+        $user = Auth::user();
+        $registration = Registration::where('user_id', $user->id)->first();
 
-        $documents = $registration->documents->pluck('file_path', 'type')->toArray();
-        
-        return view('pendaftaran.step3', compact('registration', 'documents'));
+        // Jika statusnya BUKAN pending (belum selesai) DAN BUKAN revision (disuruh perbaiki), tendang kembali ke dashboard
+        if ($registration->status !== 'pending' && $registration->status !== 'revision') {
+            return redirect()->route('dashboard')->with('error', 'Anda tidak dapat mengubah berkas pada tahap ini.');
+        }
+
+        // Pastikan kita mengembalikan view untuk form step 3
+        return view('pendaftaran.step3', compact('registration'));
     }
 
     public function postStepThree(Request $request)
@@ -164,6 +168,7 @@ class RegistrationController extends Controller
 
         $types = ['ijazah', 'kk', 'akta', 'bpjs', 'ktp', 'pas_foto'];
 
+        // Proses penyimpanan file
         foreach ($types as $type) {
             if ($request->hasFile($type)) {
                 $oldDoc = Document::where('registration_id', $registration->id)->where('type', $type)->first();
@@ -182,6 +187,18 @@ class RegistrationController extends Controller
             }
         }
 
+        // --- LOGIKA BARU: OTOMATISASI STATUS REVISI ---
+        if ($registration->status === 'revision') {
+            // Ubah status ke antrean verifikasi
+            $registration->status = 'paid';
+            // Bersihkan catatan admin
+            $registration->admin_note = null;
+            $registration->save();
+
+            return redirect()->route('dashboard')->with('success', 'Berkas perbaikan berhasil diunggah. Silakan tunggu verifikasi ulang dari panitia.');
+        }
+
+        // Jika pendaftar baru (status pending)
         return redirect()->route('dashboard')->with('success', 'Pendaftaran Anda telah kami terima.');
     }
 
@@ -219,17 +236,13 @@ class RegistrationController extends Controller
                         ->with(['parentDetail', 'documents'])
                         ->first();
 
-        // --- LOGIKA BARU ---
-        // Cek apakah santri ada, dan pastikan statusnya HANYA 'verified' atau 'accepted'
         if (!$registration || !in_array($registration->status, ['verified', 'accepted'])) {
-            // Jika status masih 'pending', 'paid', atau 'rejected', kembalikan ke dashboard dengan pesan eror
             return redirect()->route('dashboard')->with('error', 'Mohon bersabar, Kartu Pendaftaran baru bisa dicetak setelah berkas divalidasi oleh Panitia.');
         }
 
         $pasFoto = $registration->documents->where('type', 'pas_foto')->first();
         $fotoPath = $pasFoto ? public_path('storage/' . $pasFoto->file_path) : null;
 
-        // Siapkan data SETTING dinamis untuk PDF
         $data = [
             'registration' => $registration,
             'user' => $user,

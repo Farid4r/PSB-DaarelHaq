@@ -99,10 +99,10 @@
     @endif
 
     <!-- Logika Tombol Cetak / Peringatan -->
+<!-- Logika Tombol Cetak / Peringatan / Revisi -->
     @if(in_array($registration->status, ['verified', 'accepted']))
         
         <a href="{{ route('cetak.kartu') }}" target="_blank" class="w-full py-4 bg-green-600 text-white rounded-2xl font-bold shadow-ambient hover:scale-[1.02] transition-transform flex items-center justify-center gap-3">
-            <!-- Tambahan Ikon Printer agar lebih cantik -->
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
             Cetak Kartu Pendaftaran
         </a>
@@ -110,14 +110,31 @@
     @elseif($registration->status == 'paid')
         
         <div class="w-full py-4 bg-blue-100 border border-blue-200 text-blue-700 rounded-2xl shadow-ambient flex items-center px-6 gap-3">
-            <!-- Tambahan Ikon Info -->
             <svg class="w-8 h-8 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            <p class="text-sm font-semibold leading-snug">Pembayaran berhasil. Silakan tunggu Panitia memvalidasi berkas Anda sebelum dapat mencetak kartu.</p>
+            <p class="text-sm font-semibold leading-snug">Pembayaran berhasil. Silakan tunggu Panitia memvalidasi berkas Anda.</p>
+        </div>
+
+    <!-- LOGIKA BARU: TAMPILAN REVISI -->
+    @elseif($registration->status == 'revision')
+        
+        <div class="w-full py-5 bg-yellow-50 border border-yellow-200 rounded-2xl shadow-ambient flex flex-col px-6 gap-3">
+            <div class="flex items-center gap-3 text-yellow-700">
+                <svg class="w-8 h-8 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                <p class="font-bold">Berkas Anda Perlu Diperbaiki!</p>
+            </div>
+            
+            <div class="bg-white p-4 rounded-xl border border-yellow-100 mt-1">
+                <p class="text-xs font-bold text-yellow-600 uppercase mb-1">Catatan dari Panitia:</p>
+                <p class="text-sm text-gray-700 italic">"{{ $registration->admin_note }}"</p>
+            </div>
+
+            <a href="{{ route('register.step3') }}" class="mt-2 w-full py-3 bg-yellow-500 text-white text-center rounded-xl font-bold hover:bg-yellow-600 transition-colors">
+                Perbaiki & Unggah Ulang Berkas
+            </a>
         </div>
 
     @elseif($registration->status == 'rejected')
         
-        <!-- 4. Penanganan Jika Ditolak -->
         <div class="w-full py-4 bg-red-100 border border-red-200 text-red-700 rounded-2xl shadow-ambient flex items-center px-6 gap-3">
             <svg class="w-8 h-8 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
             <p class="text-sm font-semibold leading-snug">Mohon maaf, Anda dinyatakan Tidak Lulus. Silakan hubungi panitia untuk info lebih lanjut.</p>

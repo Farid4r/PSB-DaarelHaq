@@ -10,21 +10,18 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
-->withMiddleware(function (Middleware $middleware) {
+    ->withMiddleware(function (Middleware $middleware) {
         
-        // Pengecualian CSRF Midtrans yang tadi kita buat
+        // Pengecualian CSRF untuk Webhook/Callback Midtrans
         $middleware->validateCsrfTokens(except: [
             'midtrans/callback',
         ]);
 
-        // Tambahkan ALIAS MIDDLEWARE ROLE DI SINI
-        $middleware->alias([
-            'role' => \App\Http\Middleware\CheckRole::class,
-        ]);
-
+        // Mendaftarkan alias (nama panggilan) untuk Middleware Hak Akses
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
-        ]);
+            'superadmin' => \App\Http\Middleware\SuperAdminMiddleware::class,
+        ]);        
         
     })
     ->withExceptions(function (Exceptions $exceptions): void {

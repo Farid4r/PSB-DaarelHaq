@@ -4,24 +4,30 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
-use Illuminate\Support\Facades\Auth; // <--- INI KUNCI JAWABANNYA
 
 class AdminMiddleware
 {
     /**
-     * Handle an incoming request.
-     *
-     * @param  Closure(Request): (Response)  $next
+     * Menangani permintaan yang masuk.
      */
-public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next): Response
     {
-        // Cek apakah user sudah login DAN rolenya adalah 'admin' ATAU 'super_admin'
-        if (Auth::check() && in_array(Auth::user()->role, ['admin', 'super_admin'])) {
-            return $next($request); // Silakan masuk pak boss!
+        // 1. Pastikan user sudah login
+        if (!Auth::check()) {
+            return redirect('/login');
         }
 
-        // Jika bukan keduanya (berarti santri), tendang ke dashboard santri
-        return redirect('/dashboard')->with('error', 'Anda tidak memiliki akses ke halaman admin.');
+        // 2. Ambil role dari user yang sedang login
+        $userRole = Auth::user()->role;
+
+        // 3. Jika rolenya adalah 'admin' ATAU 'super_admin', persilakan masuk
+        if ($userRole === 'admin' || $userRole === 'super_admin') {
+            return $next($request); // Lanjutkan ke halaman yang dituju
+        }
+
+        // 4. Jika role bukan keduanya (berarti 'santri'), kembalikan ke dashboard
+        return redirect()->route('dashboard')->with('error', 'Akses ditolak! Anda bukan Admin.');
     }
 }

@@ -11,9 +11,10 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 | Rute di bawah ini bisa diakses oleh siapa saja tanpa perlu login.
 */
+// Ubah bagian ini di routes/web.php
 Route::get('/', function () {
     return view('welcome');
-});
+})->name('welcome'); // Tambahkan nama rute di sini
 
 // Webhook Midtrans harus publik agar server Midtrans bisa mengirim data ke aplikasi kita
 Route::post('/midtrans/callback', [RegistrationController::class, 'callback']);
@@ -52,13 +53,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Admin Routes (Rute Khusus Panitia PSB)
+| Admin & Super Admin Routes (Rute Khusus Panitia PSB)
 |--------------------------------------------------------------------------
-| Middleware 'admin' memastikan user memiliki role 'admin' atau 'super_admin'.
-| Kita juga menambahkan 'verified' demi keamanan ekstra.
+| Middleware 'admin' mengizinkan user dengan role 'admin' ATAU 'super_admin'.
 */
 Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     
+    // --- FITUR BERSAMA (Bisa diakses Admin & Super Admin) ---
     // Rute Dashboard Admin
     Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
     
@@ -69,13 +70,19 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     // Unduh Laporan
     Route::get('/export-excel', [AdminController::class, 'exportExcel'])->name('export.excel');
 
-    // Pengaturan Sistem (Biaya, Tahun Ajaran, Buka/Tutup Pendaftaran)
-    Route::get('/settings', [AdminController::class, 'settings'])->name('settings');
-    Route::post('/settings', [AdminController::class, 'updateSettings'])->name('settings.update');
-    
-    // Manajemen Hak Akses Panitia
-    Route::get('/manage-admins', [AdminController::class, 'manageAdmins'])->name('manage.admins');
-    Route::post('/manage-admins/{id}/toggle', [AdminController::class, 'toggleRole'])->name('toggle.role');
+    // --- FITUR KHUSUS SUPER ADMIN ---
+    // Rute di bawah ini dilindungi lagi oleh middleware 'superadmin'
+    Route::middleware(['superadmin'])->group(function () {
+        
+        // Pengaturan Sistem (Biaya, Tahun Ajaran, Buka/Tutup Pendaftaran)
+        Route::get('/settings', [AdminController::class, 'settings'])->name('settings');
+        Route::post('/settings', [AdminController::class, 'updateSettings'])->name('settings.update');
+        
+        // Manajemen Hak Akses Panitia
+        Route::get('/manage-admins', [AdminController::class, 'manageAdmins'])->name('manage.admins');
+        Route::post('/manage-admins/{id}/toggle', [AdminController::class, 'toggleRole'])->name('toggle.role');
+        
+    });
 });
 
 /*
