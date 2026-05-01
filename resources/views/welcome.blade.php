@@ -37,7 +37,7 @@
     @if (Route::has('login'))
         @auth
             @if(Auth::user()->role === 'santri')
-                <a href="{{ url('/dashboard') }}" class="bg-tertiary-fixed-dim text-on-tertiary-container font-label-sm text-label-sm px-6 py-3 rounded-lg hover:bg-tertiary-fixed transition-colors shadow-level-1">Dashboard Santri</a>
+                <a href="{{ url('/dashboard') }}" class="bg-tertiary-fixed-dim text-white font-label-sm text-label-sm px-6 py-3 rounded-lg hover:bg-tertiary-fixed transition-colors shadow-level-1">Dashboard Santri</a>
             @else
                 <a href="{{ route('admin.dashboard') }}" class="bg-tertiary-fixed-dim text-white font-label-sm text-label-sm px-6 py-3 rounded-lg hover:bg-tertiary-fixed transition-colors shadow-level-1">Panel Admin</a>
             @endif
