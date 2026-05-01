@@ -106,9 +106,9 @@
         <!-- User Info & Logout (Mobile) -->
         <div class="pt-4 pb-1 border-t border-emerald-800/30">
             <div class="px-4">
-                <div class="font-medium text-base text-white">{{ Auth::user()->name }}</div>
-                <div class="font-medium text-[10px] text-yellow-400 uppercase font-bold">{{ Auth::user()->role }}</div>
-                <div class="font-medium text-sm text-emerald-50/70">{{ Auth::user()->email }}</div>
+                <div class="font-bold text-base text-white">{{ Auth::user()->name }}</div>
+                <div class="font-bold text-[10px] text-yellow-400 uppercase ">{{ Auth::user()->role }}</div>
+                <div class="font-bold text-sm text-emerald-50/70">{{ Auth::user()->email }}</div>
             </div>
 
             <div class="mt-3 space-y-1">

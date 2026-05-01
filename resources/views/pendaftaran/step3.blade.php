@@ -77,7 +77,7 @@
                 @endphp
 
                 @foreach($uploadFields as $name => $info)
-                <div class="p-6 rounded-2xl bg-surface-container-low border @error($name) border-red-500 @else border-surface-container hover:border-primary/30 @enderror transition-all group relative">
+                <div class="p-6 rounded-2xl bg-surface-container-low border @error($name)border-red-500 @else border-surface-container hover:border-primary/30 @enderror transition-all group relative">
                     <label class="block mb-4">
                         <span class="block text-sm font-bold uppercase tracking-widest text-primary mb-1">{{ $info['label'] }}</span>
                         <span class="text-sm text-on-surface/50 italic">{{ $info['format'] }}</span>
@@ -89,7 +89,7 @@
                         hover:file:bg-primary hover:file:text-white file:transition-colors cursor-pointer">
                     
                     @error($name)
-                        <span class="text-red-500 text-xs mt-3 block font-medium flex items-center gap-1">
+                        <span class="text-red-500 text-xs mt-3 font-medium flex items-center gap-1">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                             {{ $message }}
                         </span>
