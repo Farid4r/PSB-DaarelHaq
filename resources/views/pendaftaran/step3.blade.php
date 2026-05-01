@@ -1,5 +1,5 @@
 @extends('layouts.app')
-
+@section('title', 'Unggah Dokumen')
 @section('content')
 <div class="min-h-screen bg-surface flex items-stretch">
     

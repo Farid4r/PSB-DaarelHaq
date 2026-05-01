@@ -1,6 +1,7 @@
 @extends('layouts.app')
-
+@section('title', 'Dashboard Pendaftaran Santri')
 @section('content')
+
 <div class="min-h-screen bg-surface py-12 px-6 lg:px-24">
     <div class="max-w-5xl mx-auto">
         

@@ -1,5 +1,5 @@
 @extends('layouts.app')
-
+@section('title', 'Manajemen Akun Panitia')
 @section('content')
 <div class="min-h-screen bg-surface flex">
     

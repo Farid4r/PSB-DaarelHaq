@@ -1,5 +1,5 @@
 @extends('layouts.app')
-
+@section('title', 'Biodata Pribadi')
 @section('content')
 <div class="min-h-screen bg-surface flex items-stretch">
     <div class="hidden lg:flex w-1/3 bg-primary p-12 flex-col justify-between relative overflow-hidden text-white">

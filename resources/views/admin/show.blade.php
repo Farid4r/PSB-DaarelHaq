@@ -1,5 +1,5 @@
 @extends('layouts.app')
-
+@section('title', 'Detail Verifikasi')
 @section('content')
 <div class="min-h-screen bg-surface p-8 lg:p-12">
     <div class="max-w-6xl mx-auto">
