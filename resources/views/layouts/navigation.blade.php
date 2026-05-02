@@ -20,10 +20,26 @@
                         <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
                             {{ __('Verifikasi Santri') }}
                         </x-nav-link>
+
+                        {{-- LINK BARU: BERITA & GALERI --}}
+                        <x-nav-link :href="route('admin.posts.index')" :active="request()->routeIs('admin.posts.*')">
+                            {{ __('Berita') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('admin.galleries.index')" :active="request()->routeIs('admin.galleries.*')">
+                            {{ __('Galeri') }}
+                        </x-nav-link>
                     @endif
 
                     {{-- MENU KHUSUS SUPER ADMIN SAJA --}}
                     @if(Auth::user()->role === 'super_admin')
+                        {{-- LINK BARU: PROFIL & PIMPINAN --}}
+                        <x-nav-link :href="route('admin.profil.edit')" :active="request()->routeIs('admin.profil.edit')">
+                            {{ __('Profil Pondok') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('admin.leaders.index')" :active="request()->routeIs('admin.leaders.*')">
+                            {{ __('Pimpinan') }}
+                        </x-nav-link>
+
                         <x-nav-link :href="route('admin.settings')" :active="request()->routeIs('admin.settings')">
                             {{ __('Pengaturan') }}
                         </x-nav-link>
@@ -87,10 +103,26 @@
                 <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
                     {{ __('Verifikasi Santri') }}
                 </x-responsive-nav-link>
+
+                {{-- LINK MOBILE: BERITA & GALERI --}}
+                <x-responsive-nav-link :href="route('admin.posts.index')" :active="request()->routeIs('admin.posts.*')">
+                    {{ __('Berita') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.galleries.index')" :active="request()->routeIs('admin.galleries.*')">
+                    {{ __('Galeri') }}
+                </x-responsive-nav-link>
             @endif
 
             {{-- MENU KHUSUS SUPER ADMIN SAJA (MOBILE) --}}
             @if(Auth::user()->role === 'super_admin')
+                {{-- LINK MOBILE: PROFIL & PIMPINAN --}}
+                <x-responsive-nav-link :href="route('admin.profil.edit')" :active="request()->routeIs('admin.profil.edit')">
+                    {{ __('Profil Pondok') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.leaders.index')" :active="request()->routeIs('admin.leaders.*')">
+                    {{ __('Pimpinan') }}
+                </x-responsive-nav-link>
+
                 <x-responsive-nav-link :href="route('admin.settings')" :active="request()->routeIs('admin.settings')">
                     {{ __('Pengaturan') }}
                 </x-responsive-nav-link>

@@ -40,7 +40,7 @@
                 <div>
                     <label for="email" class="block text-sm font-medium text-on-surface/80 mb-1">Alamat Email</label>
                     <input type="email" id="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="username"
-                        class="w-full px-4 py-3 rounded-xl border @error('email'border-red-600 @else border-surface-container @enderror focus:ring-2 focus:ring-primary-container focus:border-primary-container transition-colors outline-none bg-surface-container-low focus:bg-surface-container-lowest"
+                        class="w-full px-4 py-3 rounded-xl border @error('email') border-red-600 @else border-surface-container @enderror focus:ring-2 focus:ring-primary-container focus:border-primary-container transition-colors outline-none bg-surface-container-low focus:bg-surface-container-lowest"
                         placeholder="contoh@email.com">
                     
                     @error('email')
@@ -56,7 +56,7 @@
                         @endif
                     </div>
                     <input type="password" id="password" name="password" required autocomplete="current-password"
-                        class="w-full px-4 py-3 rounded-xl border @error('password')border-red-600 @else border-surface-container @enderror focus:ring-2 focus:ring-primary-container focus:border-primary-container transition-colors outline-none bg-surface-container-low focus:bg-surface-container-lowest"
+                        class="w-full px-4 py-3 rounded-xl border @error('password') border-red-600 @else border-surface-container @enderror focus:ring-2 focus:ring-primary-container focus:border-primary-container transition-colors outline-none bg-surface-container-low focus:bg-surface-container-lowest"
                         placeholder="••••••••">
                     
                     @error('password')

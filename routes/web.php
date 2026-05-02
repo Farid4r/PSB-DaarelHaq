@@ -1,9 +1,22 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
+use Illuminate\Support\Facades\Route;
+
+// Controller Utama
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\AdminController;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\FrontController;
+
+// Controller Admin
+use App\Http\Controllers\Admin\LeaderController;
+use App\Http\Controllers\Admin\PostController;
+use App\Http\Controllers\Admin\GalleryController;
+
+// === PENGGUNAAN ALIAS UNTUK MENCEGAH BENTROK ===
+// Alias untuk Profil Akun (User/Santri)
+use App\Http\Controllers\ProfileController as UserProfileController;
+// Alias untuk Profil Lembaga (Admin)
+use App\Http\Controllers\Admin\ProfileController as PondokProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -11,14 +24,16 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 | Rute di bawah ini bisa diakses oleh siapa saja tanpa perlu login.
 */
-// Ubah bagian ini di routes/web.php
-Route::get('/', function () {
-    return view('welcome');
-})->name('welcome'); // Tambahkan nama rute di sini
+// Rute Halaman Publik (Etalase)
+Route::get('/', [FrontController::class, 'index'])->name('welcome');
+
+// Rute untuk Publikasi Berita & Galeri
+Route::get('/berita', [FrontController::class, 'berita'])->name('berita.index');
+Route::get('/berita/{slug}', [FrontController::class, 'detailBerita'])->name('berita.show');
+Route::get('/galeri', [FrontController::class, 'galeri'])->name('galeri.index');
 
 // Webhook Midtrans harus publik agar server Midtrans bisa mengirim data ke aplikasi kita
 Route::post('/midtrans/callback', [RegistrationController::class, 'callback']);
-
 
 /*
 |--------------------------------------------------------------------------
@@ -33,13 +48,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [RegistrationController::class, 'dashboard'])->name('dashboard');
     Route::get('/cetak-kartu', [RegistrationController::class, 'cetakKartu'])->name('cetak.kartu');
 
-    // Profil User (Bawaan Laravel Breeze/UI)
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    // Profil User (Bawaan Laravel Breeze/UI) -> Menggunakan UserProfileController
+    Route::get('/profile', [UserProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [UserProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [UserProfileController::class, 'destroy'])->name('profile.destroy');
 
     // --- ALUR PENDAFTARAN (MULTI-STEP) ---
-    // Santri tidak akan bisa mengakses form ini jika emailnya belum diverifikasi
     Route::get('/register/step-1', [RegistrationController::class, 'stepOne'])->name('register.step1');
     Route::post('/register/step-1', [RegistrationController::class, 'postStepOne'])->name('register.step1.post');
 
@@ -60,6 +74,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     
     // --- FITUR BERSAMA (Bisa diakses Admin & Super Admin) ---
+    
     // Rute Dashboard Admin
     Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
     
@@ -69,6 +84,11 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     
     // Unduh Laporan
     Route::get('/export-excel', [AdminController::class, 'exportExcel'])->name('export.excel');
+
+    // --- MANAJEMEN BERITA & GALERI ---
+    // Rute ini kita tambahkan di sini agar Admin biasa bisa menulis berita
+    Route::resource('posts', PostController::class);
+    Route::resource('galleries', GalleryController::class);
 
     // --- FITUR KHUSUS SUPER ADMIN ---
     // Rute di bawah ini dilindungi lagi oleh middleware 'superadmin'
@@ -81,7 +101,13 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
         // Manajemen Hak Akses Panitia
         Route::get('/manage-admins', [AdminController::class, 'manageAdmins'])->name('manage.admins');
         Route::post('/manage-admins/{id}/toggle', [AdminController::class, 'toggleRole'])->name('toggle.role');
+
+        // Rute Profil Pondok (Teks Visi, Misi, dsb) -> Menggunakan PondokProfileController
+        Route::get('/profil-pondok', [PondokProfileController::class, 'edit'])->name('profil.edit');
+        Route::post('/profil-pondok', [PondokProfileController::class, 'update'])->name('profil.update');
         
+        // Manajemen Data Pimpinan Pondok
+        Route::resource('leaders', LeaderController::class);
     });
 });
 
