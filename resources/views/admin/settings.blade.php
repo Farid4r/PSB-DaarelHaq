@@ -1,8 +1,9 @@
 <x-admin-layout>
+
     <div class="flex-1 p-8 lg:p-12 overflow-y-auto">
-        <div class="max-w-4xl mx-auto">
+        <div class="max-w-6xl mx-auto">
             
-            <a href="{{ route('admin.dashboard') }}" class="">
+            <a href="{{ route('admin.dashboard') }}" class="text-sm font-bold text-on-surface/40 hover:text-primary mb-6 inline-flex items-center gap-2">
                 &larr; Kembali ke Dashboard Utama
             </a>
 
@@ -10,7 +11,7 @@
             <p class="text-on-surface/60 mb-8">Konfigurasi parameter global pendaftaran santri.</p>
 
             @if(session('success'))
-                <div class="mb-6 p-4 bg-green-100 text-green-700 rounded-xl font-bold border border-green-200">
+            <div class="mb-6 p-4 bg-green-100 text-green-700 rounded-xl font-bold border border-green-200">
                     {{ session('success') }}
                 </div>
             @endif

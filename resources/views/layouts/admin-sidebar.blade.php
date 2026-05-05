@@ -1,5 +1,5 @@
 {{-- Sidebar Container dengan warna hijau tua --}}
-<div class="flex flex-col h-full p-6 bg-[#073216] text-white">
+<div class="flex flex-col h-full p-6 bg-[#001b0a] text-white">
     
     {{-- Header Sidebar --}}
     <div class="flex items-center justify-between mb-10 border-b border-white/20 pb-4">
