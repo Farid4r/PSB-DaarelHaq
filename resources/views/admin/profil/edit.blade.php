@@ -1,10 +1,7 @@
-@extends('layouts.app')
-
-@section('title', 'Manajemen Profil Pondok')
-
-@section('content')
-<div class="py-12">
+<x-admin-layout>
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <a href="{{ route('admin.dashboard') }}" class="text-sm font-bold text-on-surface/40 hover:text-primary mb-6 inline-flex items-center gap-2"> &larr; Kembali ke Dashboard</a>
+
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6 border-b border-emerald-800/20">
             <h2 class="text-2xl font-bold text-[#073216] mb-6 font-['Manrope']">Manajemen Profil Pondok</h2>
 
@@ -47,7 +44,7 @@
         </div>
     </div>
 </div>
-
+</x-admin-layout>
 {{-- Script CKEditor 5 untuk mempercantik textarea --}}
 <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
 <script>
@@ -64,4 +61,3 @@
 <style>
     .ck-editor__editable { min-height: 200px; }
 </style>
-@endsection

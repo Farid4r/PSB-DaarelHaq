@@ -1,13 +1,9 @@
-@extends('layouts.app')
-
-@section('title', 'Manajemen Galeri - Admin')
-
-@section('content')
-<div class="py-12">
+<x-admin-layout>
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <a href="{{ route('admin.dashboard') }}" class="text-sm font-bold text-on-surface/40 hover:text-primary mb-6 inline-flex items-center gap-2"> &larr; Kembali ke Dashboard</a>
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-emerald-900">Galeri Pondok</h2>
+                <h2  class="text-2xl font-bold text-emerald-900">Daftar Galleri</h2>
                 <a href="{{ route('admin.galleries.create') }}" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2 px-4 rounded-lg transition duration-200">
                     + Tambah Foto
                 </a>
@@ -62,4 +58,4 @@
         </div>
     </div>
 </div>
-@endsection
+</x-admin-layout>

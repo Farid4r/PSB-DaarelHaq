@@ -1,3 +1,4 @@
+
 <x-public-layout>
     <x-slot name="title">Berita & Kegiatan - Daar el-Haq</x-slot>
 

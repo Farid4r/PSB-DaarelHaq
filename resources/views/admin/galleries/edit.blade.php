@@ -1,8 +1,4 @@
-@extends('layouts.app')
-
-@section('title', 'Edit Foto Galeri - Admin')
-
-@section('content')
+<x-admin-layout>
 <div class="py-12">
     <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
@@ -47,4 +43,4 @@
         </div>
     </div>
 </div>
-@endsection
+</x-admin-layout>

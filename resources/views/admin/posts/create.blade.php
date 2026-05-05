@@ -1,10 +1,5 @@
-@extends('layouts.app')
-
-@section('title', 'Tulis Berita Baru - Admin')
-
-@section('content')
-<div class="py-12">
-    <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
+<x-admin-layout>
+    <div class="flex-1 p-8 lg:p-12 overflow-y-auto">
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
             <div class="flex items-center gap-4 mb-6">
                 <a href="{{ route('admin.posts.index') }}" class="text-gray-500 hover:text-gray-700">
@@ -67,4 +62,4 @@
         min-height: 400px;
     }
 </style>
-@endsection
+</x-admin-layout>

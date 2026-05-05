@@ -1,5 +1,5 @@
-<x-public-layout>
-    <x-slot name="title">Berita & Kegiatan - Daar el-Haq</x-slot>
+<x-admin-layout>
+    <div class="bg-white p-6 rounded-xl shadow-sm">
 
     <main class="flex-grow pt-12 pb-24">
         <div class="max-w-7xl mx-auto px-6 md:px-8">

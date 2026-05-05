@@ -1,9 +1,6 @@
-@extends('layouts.app')
-@section('title', 'Detail Verifikasi')
-@section('content')
-<div class="min-h-screen bg-surface p-8 lg:p-12">
-    <div class="max-w-6xl mx-auto">
-        
+<x-admin-layout>
+    <div class="flex-1 p-8 lg:p-12 overflow-y-auto">
+          
         <!-- HEADER BAGIAN ATAS -->
         <div class="flex flex-wrap items-center justify-between gap-4 mb-8 border-b border-surface-container pb-6">
             <div>
@@ -17,9 +14,9 @@
             <!-- Mengganti tombol dengan Badge Status Saat Ini -->
             <div class="bg-white p-4 rounded-xl border border-surface-container shadow-sm flex items-center gap-4">
                 <span class="text-sm font-bold text-on-surface/60">Status Saat Ini:</span>
-                <span class="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg text-sm font-bold uppercase tracking-widest border border-gray-200">
+                <sp     an class="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg text-sm font-bold uppercase tracking-widest border border-gray-200">
                     {{ $registration->status }}
-                </span>
+                </sp>
             </div>
         </div>
 
@@ -150,4 +147,4 @@
         });
     });
 </script>
-@endsection
+</x-admin-layout>

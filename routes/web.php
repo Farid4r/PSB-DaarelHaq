@@ -90,6 +90,13 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::resource('posts', PostController::class);
     Route::resource('galleries', GalleryController::class);
 
+    // Rute Profil Pondok (Teks Visi, Misi, dsb) -> Menggunakan PondokProfileController
+    Route::get('/profil-pondok', [PondokProfileController::class, 'edit'])->name('profil.edit');
+    Route::post('/profil-pondok', [PondokProfileController::class, 'update'])->name('profil.update');
+        
+    // Manajemen Data Pimpinan Pondok
+    Route::resource('leaders', LeaderController::class);
+
     // --- FITUR KHUSUS SUPER ADMIN ---
     // Rute di bawah ini dilindungi lagi oleh middleware 'superadmin'
     Route::middleware(['superadmin'])->group(function () {
@@ -102,12 +109,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
         Route::get('/manage-admins', [AdminController::class, 'manageAdmins'])->name('manage.admins');
         Route::post('/manage-admins/{id}/toggle', [AdminController::class, 'toggleRole'])->name('toggle.role');
 
-        // Rute Profil Pondok (Teks Visi, Misi, dsb) -> Menggunakan PondokProfileController
-        Route::get('/profil-pondok', [PondokProfileController::class, 'edit'])->name('profil.edit');
-        Route::post('/profil-pondok', [PondokProfileController::class, 'update'])->name('profil.update');
-        
-        // Manajemen Data Pimpinan Pondok
-        Route::resource('leaders', LeaderController::class);
+  
     });
 });
 
