@@ -42,8 +42,12 @@
                     {{-- TOMBOL HAMBURGER (Hanya muncul di HP) --}}
                     <button @click="sidebarOpen = true" class="md:hidden text-gray-100 p-2 hover:bg-gray-100 rounded-lg">
                         <span class="material-symbols-outlined">menu</span>
-                    </button>
-                    <h2 class="font-bold text-green-100 hidden md:block">Selamat Datang, {{ Auth::user()->name }}</h2>
+                    </button>                            
+                    <a href="{{ route('welcome') }}" class="flex items-center gap-3">
+                        <img src="{{ asset('assets/images/logo-ponpes.png') }}" alt="Logo Daar el-Haq" class="h-10 w-auto object-contain">
+                    <h2 class="font-bold text-yellow-400 hidden md:block">Daar el-haq</h2>
+                    </a>
+                    <h2 class="font-bold text-green-100">Hallo, {{ Auth::user()->name }}</h2>
                 </div>
                 
                 {{-- INFO USER & LOGOUT --}}
