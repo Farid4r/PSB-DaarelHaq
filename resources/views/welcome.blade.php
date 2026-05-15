@@ -159,43 +159,66 @@
         </section>
 
         {{-- PROGRAM UNGGULAN SECTION --}}
-        <section class="py-24 bg-surface">
-            <div class="max-w-[1280px] mx-auto px-6 md:px-8">
-                <div class="text-center mb-16 space-y-4">
-                    <h2 class="font-h2 text-h2 text-on-surface">Program Unggulan</h2>
-                    <p class="font-body-md text-body-md text-on-surface-variant max-w-2xl mx-auto">
-                        Kurikulum komprehensif yang menyeimbangkan kecerdasan spiritual, akademik, dan keterampilan bahasa internasional.
-                    </p>
+ <section class="py-24 bg-surface">
+    <div class="max-w-[1280px] mx-auto px-6 md:px-8">
+        <!-- Header Section -->
+        <div class="text-center mb-16 space-y-4">
+            <h2 class="font-h2 text-h2 text-on-surface">Lokasi Kami</h2>
+            <p class="font-body-md text-body-md text-on-surface-variant max-w-2xl mx-auto">
+                Kunjungi pondok kami untuk melihat langsung fasilitas pendidikan dan lingkungan belajar yang asri dan kondusif.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Informasi Alamat -->
+            <div class="bg-surface rounded-xl shadow-level-1 border border-outline-variant p-8 flex flex-col justify-between">
+                <div>
+                    <div class="w-12 h-12 rounded-full bg-primary-container text-on-primary flex items-center justify-center mb-6">
+                        <span class="material-symbols-outlined">location_on</span>
+                    </div>
+                    <h3 class="font-h3 text-h3 text-on-surface mb-4">Lokasi Pondok</h3>
+                    <div class="space-y-4 text-on-surface-variant font-body-md">
+                        <p class="flex gap-3">
+                            <span class="material-symbols-outlined text-primary">map</span>
+                            Jl. Maulana Hasanudin No.16, Cilangkap, Kec. Kalanganyar, Kabupaten Lebak, Banten 42312
+                        </p>
+                        <p class="flex gap-3">
+                            <span class="material-symbols-outlined text-primary">call</span>
+                            +62 838-9901-3348
+                        </p>
+                        <p class="flex gap-3">
+                            <span class="material-symbols-outlined text-primary">mail</span>
+                            ponpes.modern@daarelhaq.sch.id
+                        </p>
+                    </div>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="md:col-span-2 bg-surface rounded-xl shadow-level-1 border-t-4 border-tertiary-fixed-dim p-8 relative overflow-hidden group">
-                        <div class="absolute right-0 bottom-0 opacity-5 group-hover:opacity-10 transition-opacity transform translate-x-4 translate-y-4">
-                            <span class="material-symbols-outlined text-[200px]" style="font-variation-settings: 'FILL' 1;">menu_book</span>
-                        </div>
-                        <div class="relative z-10">
-                            <div class="w-12 h-12 rounded-full bg-primary-container text-tertiary-fixed-dim flex items-center justify-center mb-6">
-                                <span class="material-symbols-outlined">menu_book</span>
-                            </div>
-                            <h3 class="font-h3 text-h3 text-on-surface mb-3">Tahfidz Al-Qur'an</h3>
-                            <p class="font-body-md text-body-md text-on-surface-variant mb-6 max-w-md">
-                                Program intensif hafalan 30 juz dengan metode mutqin, didampingi oleh musyrif berpengalaman dan bersanad.
-                            </p>
-                        </div>
-                    </div>
-                    <div class="bg-surface rounded-xl shadow-level-1 border border-outline-variant p-8 relative overflow-hidden group hover:shadow-level-2 transition-shadow">
-                        <div class="relative z-10">
-                            <div class="w-12 h-12 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center mb-6">
-                                <span class="material-symbols-outlined">science</span>
-                            </div>
-                            <h3 class="font-h3 text-h3 text-on-surface mb-3">Academic Excellence</h3>
-                            <p class="font-body-md text-body-md text-on-surface-variant mb-6">
-                                Kurikulum nasional yang diperkaya dengan pendekatan STEM untuk mempersiapkan generasi inovator.
-                            </p>
-                        </div>
-                    </div>
+
+                <div class="mt-8">
+                    <a href="https://maps.app.goo.gl/eto4ohtP3zJhiha39" target="_blank" 
+                       class="inline-flex items-center justify-center w-full py-3 px-6 bg-primary text-on-primary rounded-full font-bold hover:shadow-lg transition-all gap-2">
+                        <span class="material-symbols-outlined text-sm">directions</span>
+                        Petunjuk Arah
+                    </a>
                 </div>
             </div>
-        </section>
+
+            <!-- Google Maps Embed -->
+            <div class="lg:col-span-2 h-[450px] rounded-xl shadow-level-1 border border-outline-variant overflow-hidden group relative">
+                <!-- Ganti URL di src di bawah ini dengan link embed dari Google Maps Anda -->
+                <iframe 
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3965.258884485957!2d106.22700307589994!3d-6.360529793629496!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e4216dfe4dad789%3A0x393663db24eca811!2sPondok%20Pesantren%20Daar%20El-Haq!5e0!3m2!1sid!2sid!4v1778844951736!5m2!1sid!2sid" 
+                    width="100%" 
+                    height="100%" 
+                    style="border:0;" 
+                    allowfullscreen="" 
+                    loading="lazy" 
+                    referrerpolicy="no-referrer-when-downgrade"
+                    class="grayscale-[20%] contrast-[1.1] hover:grayscale-0 transition-all duration-500">
+                </iframe>
+            </div>
+        </div>
+    </div>
+</section>
 
         {{-- ALUR PENDAFTARAN SECTION --}}
         <section class="py-24 bg-surface-container-low">
