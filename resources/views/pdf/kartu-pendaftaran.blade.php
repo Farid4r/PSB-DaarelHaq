@@ -107,12 +107,35 @@
 </head>
 <body>
 
-    <div class="kop-surat">
-        <h1>Pondok Pesantren Daar el-Haq</h1>
-        <h2>Panitia Penerimaan Santri Baru (PSB) Tahun Ajaran {{ $academicYear }}</h2>
-        <p>Jl. Pendidikan No. 99, Kecamatan Kedamaian, Kota Bahagia, Provinsi Sejahtera 12345</p>
-        <p>Website: www.daarelhaq.sch.id | Email: info@daarelhaq.sch.id | Telp: (021) 1234567</p>
-    </div>
+<table style="width: 100%; border-bottom: 3px solid #065F46; padding-bottom: 10px; margin-bottom: 2px;">
+        <tr>
+            <td style="width: 15%; text-align: left; vertical-align: middle;">
+                @if($logoPath && file_exists($logoPath))
+                    <img src="{{ $logoPath }}" style="width: 80px; height: auto;">
+                @else
+                    <div style="width: 70px; height: 70px; background-color: #eee; border: 1px solid #ccc; line-height: 70px; text-align: center; font-size: 10px;">
+                        LOGO
+                    </div>
+                @endif
+            </td>
+            
+            <td style="width: 85%; text-align: center; vertical-align: middle;">
+                <h1 style="margin: 0; font-size: 22px; color: #065F46; text-transform: uppercase;">
+                    Pondok Pesantren Daar El Haq
+                </h1>
+                <h2 style="margin: 5px 0; font-size: 16px; color: #92400E;">
+                    Panitia Penerimaan Santri Baru (PSB) Tahun Ajaran {{ $academicYear }}
+                </h2>
+                <p style="margin: 2px 0; font-size: 11px;">
+                    Jl. Maulana Hasanudin. Kp. Ojar RT.02 / 01 Desa Cilangkap Kecamatan Kalanganyar Kabupaten Lebak Provinsi Banten
+                </p>
+                <p style="margin: 2px 0; font-size: 11px;">
+                    Website: www.daarelhaq.sch.id | Email: info@daarelhaq.sch.id | Telp: (021) 1234567
+                </p>
+            </td>
+        </tr>
+    </table>
+
     <div class="garis-ganda"></div>
 
     <div class="judul-kartu">KARTU TANDA PENDAFTARAN SANTRI</div>

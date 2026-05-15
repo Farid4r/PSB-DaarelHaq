@@ -1,7 +1,7 @@
-<x-admin-layout>
+<x-public-layout>
     <div class="bg-white p-6 rounded-xl shadow-sm">
 
-    <main class="flex-grow pt-12 pb-24">
+    <main class="flex-grow pb-24">
         <div class="max-w-7xl mx-auto px-6 md:px-8">
         {{-- Judul Halaman --}}
         <div class="text-center mt-16 mb-16 space-y-4">
@@ -64,7 +64,7 @@
         <div class="mt-16 flex justify-center">
             {{ $posts->links() }}
         </div>
-
+        </div>        
     </div>
 </main>
 

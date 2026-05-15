@@ -229,32 +229,43 @@ class RegistrationController extends Controller
         return response()->json(['message' => 'Callback processed']);
     }
 
-    public function cetakKartu()
-    {
-        $user = Auth::user();
-        $registration = Registration::where('user_id', $user->id)
-                        ->with(['parentDetail', 'documents'])
-                        ->first();
+public function cetakKartu()
+{
+    $user = Auth::user();
+    $registration = Registration::where('user_id', $user->id)
+                    ->with(['parentDetail', 'documents'])
+                    ->first();
 
-        if (!$registration || !in_array($registration->status, ['verified', 'accepted'])) {
-            return redirect()->route('dashboard')->with('error', 'Mohon bersabar, Kartu Pendaftaran baru bisa dicetak setelah berkas divalidasi oleh Panitia.');
-        }
-
-        $pasFoto = $registration->documents->where('type', 'pas_foto')->first();
-        $fotoPath = $pasFoto ? public_path('storage/' . $pasFoto->file_path) : null;
-
-        $data = [
-            'registration' => $registration,
-            'user' => $user,
-            'fotoPath' => $fotoPath,
-            'tanggalCetak' => \Carbon\Carbon::now()->translatedFormat('d F Y'),
-            'academicYear' => Setting::get('academic_year', '2026/2027'),
-            'headOfCommittee' => Setting::get('head_of_committee', 'Ketua Panitia PSB')
-        ];
-
-        $pdf = Pdf::loadView('pdf.kartu-pendaftaran', $data);
-        $pdf->setPaper('A4', 'portrait'); 
-
-        return $pdf->stream('Kartu_Pendaftaran_' . $registration->registration_number . '.pdf');
+    // 1. Cek keamanan: Kartu hanya bisa dicetak jika sudah diverifikasi/diterima
+    if (!$registration || !in_array($registration->status, ['verified', 'accepted'])) {
+        return redirect()->route('dashboard')->with('error', 'Mohon bersabar, Kartu Pendaftaran baru bisa dicetak setelah berkas divalidasi oleh Panitia.');
     }
+
+    // 2. Menyiapkan Path Foto Santri
+    $pasFoto = $registration->documents->where('type', 'pas_foto')->first();
+    $fotoPath = $pasFoto ? public_path('storage/' . $pasFoto->file_path) : null;
+
+    // 3. Menyiapkan Path Logo Pondok (Krusial untuk DomPDF)
+    // Pastikan file logo-ponpes.png ada di folder public/assets/images/
+    $logoPath = public_path('assets/images/logo-ponpes.png');
+
+    // 4. Menyusun data untuk dikirim ke View PDF
+    $data = [
+        'registration'    => $registration,
+        'user'            => $user,
+        'fotoPath'        => $fotoPath,
+        'logoPath'        => $logoPath, // Variabel baru untuk logo
+        'tanggalCetak'    => \Carbon\Carbon::now()->translatedFormat('d F Y'),
+        
+        // Mengambil dari model Setting (pastikan Model Setting sudah di-import di atas)
+        'academicYear'    => \App\Models\Setting::where('key', 'academic_year')->value('value') ?? '2026/2027',
+        'headOfCommittee' => \App\Models\Setting::where('key', 'head_of_committee')->value('value') ?? 'Ketua Panitia PSB'
+    ];
+
+    // 5. Generate PDF
+    $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.kartu-pendaftaran', $data);
+    $pdf->setPaper('A4', 'portrait'); 
+
+    return $pdf->stream('Kartu_Pendaftaran_' . $registration->registration_number . '.pdf');
+}
 }
