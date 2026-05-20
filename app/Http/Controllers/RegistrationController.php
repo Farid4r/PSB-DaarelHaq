@@ -228,20 +228,19 @@ class RegistrationController extends Controller
         
         return response()->json(['message' => 'Callback processed']);
     }
-
-public function cetakKartu()
-{
-    $user = Auth::user();
-    $registration = Registration::where('user_id', $user->id)
+    public function cetakKartu()
+    {
+        $user = Auth::user();
+        $registration = Registration::where('user_id', $user->id)
                     ->with(['parentDetail', 'documents'])
                     ->first();
-
-    // 1. Cek keamanan: Kartu hanya bisa dicetak jika sudah diverifikasi/diterima
-    if (!$registration || !in_array($registration->status, ['verified', 'accepted'])) {
-        return redirect()->route('dashboard')->with('error', 'Mohon bersabar, Kartu Pendaftaran baru bisa dicetak setelah berkas divalidasi oleh Panitia.');
-    }
-
-    // 2. Menyiapkan Path Foto Santri
+    
+                    // 1. Cek keamanan: Kartu hanya bisa dicetak jika sudah diverifikasi/diterima
+                    if (!$registration || !in_array($registration->status, ['verified', 'accepted'])) {
+                        return redirect()->route('dashboard')->with('error', 'Mohon bersabar, Kartu Pendaftaran baru bisa dicetak setelah berkas divalidasi oleh Panitia.');
+                        }
+    
+                        // 2. Menyiapkan Path Foto Santri
     $pasFoto = $registration->documents->where('type', 'pas_foto')->first();
     $fotoPath = $pasFoto ? public_path('storage/' . $pasFoto->file_path) : null;
 
