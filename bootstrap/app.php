@@ -10,13 +10,11 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
-    ->withMiddleware(function (Middleware $middleware) {
-        
-        // Pengecualian CSRF untuk Webhook/Callback Midtrans
-        $middleware->validateCsrfTokens(except: [
-            'midtrans/callback',
-        ]);
-
+->withMiddleware(function (Middleware $middleware) {
+    $middleware->validateCsrfTokens(except: [
+        'midtrans/callback',
+        'midtrans/callback/*',
+    ]);
         // Mendaftarkan alias (nama panggilan) untuk Middleware Hak Akses
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,

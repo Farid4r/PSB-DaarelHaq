@@ -26,27 +26,42 @@
                         Pendidikan yang mengakar pada tradisi, disampaikan dengan presisi modern. Membentuk generasi unggul yang menguasai ilmu agama dan sains teknologi.
                     </p>
 
-                    <div class="pt-4 flex flex-wrap gap-4">
-                        @auth
-                            <a href="{{ url('/dashboard') }}" class="bg-tertiary-fixed-dim text-white font-label-sm text-label-sm px-8 py-4 rounded-lg hover:bg-tertiary-fixed transition-colors shadow-level-2">
-                                Lanjutkan ke Dashboard
-                            </a>
-                        @else
-                            @if($isOpen)
-                                <a href="{{ route('register') }}" class="bg-tertiary-fixed-dim text-white font-label-sm text-label-sm px-8 py-4 rounded-lg hover:bg-tertiary-fixed transition-colors shadow-level-2">
-                                    Daftar Sekarang
-                                </a>
-                            @else
-                                <div class="bg-red-600 text-white px-8 py-4 rounded-lg font-bold shadow-level-2">
-                                    Pendaftaran Gelombang Ini Telah Ditutup
-                                </div>
-                            @endif
-                            
-                            <a href="{{ route('login') }}" class="border border-inverse-primary text-inverse-primary font-label-sm text-label-sm px-8 py-4 rounded-lg hover:bg-surface-tint/20 transition-colors">
-                                Sudah Punya Akun? Masuk
-                            </a>
-                        @endauth
-                    </div>
+<div class="pt-4 flex flex-wrap gap-4">
+    @if (Route::has('login'))
+        @auth
+            <!-- Cek Role Pengguna Saat Sudah Login -->
+            @if(Auth::user()->role === 'santri')
+                <a href="{{ url('/dashboard') }}" class="bg-tertiary-fixed-dim text-white font-label-sm text-label-sm px-8 py-4 rounded-lg hover:bg-tertiary-fixed transition-colors shadow-level-2">
+                    Lanjutkan ke Dashboard Santri
+                </a>
+            @else
+                <a href="{{ route('admin.dashboard') }}" class="bg-tertiary-fixed-dim text-white font-label-sm text-label-sm px-8 py-4 rounded-lg hover:bg-tertiary-fixed transition-colors shadow-level-2">
+                    Lanjutkan ke Panel Admin
+                </a>
+            @endif
+        @else
+            <!-- Ambil status buka/tutup pendaftaran dari setting -->
+            @php
+                $isOpen = \App\Models\Setting::where('key', 'is_registration_open')->value('value') == '1';
+            @endphp
+
+            <!-- Kondisi Jika Belum Login -->
+            @if (Route::has('register') && $isOpen)
+                <a href="{{ route('register') }}" class="bg-tertiary-fixed-dim text-white font-label-sm text-label-sm px-8 py-4 rounded-lg hover:bg-tertiary-fixed transition-colors shadow-level-2">
+                    Daftar Sekarang
+                </a>
+            @else
+                <div class="bg-red-600 text-white px-8 py-4 rounded-lg font-bold shadow-level-2 text-sm flex items-center">
+                    Pendaftaran Gelombang Ini Telah Ditutup
+                </div>
+            @endif
+            
+            <a href="{{ route('login') }}" class="border border-inverse-primary text-inverse-primary font-label-sm text-label-sm px-8 py-4 rounded-lg hover:bg-surface-tint/20 transition-colors">
+                Sudah Punya Akun? Masuk
+            </a>
+        @endauth
+    @endif
+</div>
                 </div>
 
                 <div class="w-full md:w-2/5 hidden md:block">

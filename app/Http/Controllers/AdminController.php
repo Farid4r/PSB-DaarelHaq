@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Registration; 
 use App\Exports\RegistrationsExport;
 use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Support\Facades\Auth; // <--- Tambahan untuk mengatasi error 'user'
+use Illuminate\Support\Facades\Auth; 
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Support\Facades\Mail;
@@ -16,16 +16,20 @@ class AdminController extends Controller
 {
     public function index()
     {
-        // Ambil semua data pendaftaran beserta data user-nya, urutkan dari yang paling baru
         $registrations = Registration::with('user')->latest()->get();
 
-        // Hitung statistik untuk ditampilkan di kartu atas
+        // --- PENYESUAIAN STATISTIK COUNTER SESUAI APPFLOW BARU ---
         $totalPendaftar = $registrations->count();
-        $menungguPembayaran = $registrations->where('status', 'pending')->count();
-        $menungguVerifikasi = $registrations->where('status', 'paid')->count();
-        $lulus = $registrations->where('status', 'accepted')->count();
+        
+        // pending = santri baru upload berkas, menunggu admin periksa
+        $menungguVerifikasi = $registrations->where('status', 'pending')->count(); 
+        
+        // verified = berkas sudah di-ACC admin, sekarang menunggu santri bayar di Midtrans
+        $menungguPembayaran = $registrations->where('status', 'verified')->count(); 
+        
+        // paid = pembayaran lunas, accepted = lulus seleksi akhir pondok
+        $lulus = $registrations->whereIn('status', ['paid', 'accepted'])->count();
 
-        // Kirim semua data ke halaman view admin.dashboard
         return view('admin.dashboard', compact(
             'registrations', 
             'totalPendaftar', 
@@ -35,43 +39,35 @@ class AdminController extends Controller
         ));
     }
 
-    // Menambahkan tipe 'string' pada $id agar VS Code Intelephense tidak protes
     public function show(string $id)
     {
-        // Cari data pendaftaran berdasarkan ID, tarik juga data user, orang tua, dan dokumen
         $registration = Registration::with(['user', 'parentDetail', 'documents'])->findOrFail($id);
-        
         return view('admin.show', compact('registration'));
     }
 
-    // Menambahkan tipe 'string' pada $id
     public function updateStatus(Request $request, string $id)
     {
-        // 1. Tambahkan validasi untuk admin_note
         $request->validate([
-            'status' => 'required|string',
-            'admin_note' => 'nullable|string' // Catatan boleh kosong
+            'status' => 'required|string|in:pending,paid,verified,accepted,rejected', // Validasi strict sesuai ENUM DB
+            'admin_note' => 'nullable|string'
         ]);
 
         $registration = Registration::findOrFail($id);
         
-        // 2. Simpan status dan catatan admin ke database
         $registration->status = $request->status;
         $registration->admin_note = $request->admin_note;
         $registration->save();
 
-        // 3. Logika pengiriman email (tetap dipertahankan)
-        if (in_array($request->status, ['accepted', 'rejected'])) {
+        // Kirim email pengumuman hasil akhir jika statusnya diterima/ditolak final dari pondok
+        if (in_array($request->status, ['accepted', 'rejected']) && empty($request->admin_note)) {
             Mail::to($registration->user->email)->send(new PengumumanHasilMail($registration));
         }
 
         return redirect()->back()->with('success', 'Status pendaftaran dan catatan berhasil diperbarui!');
     }
 
-    // Fungsi untuk mendownload Excel
     public function exportExcel()
     {
-        // Menggunakan Facade Auth yang sudah di-import di atas
         if (Auth::user()->role !== 'super_admin') {
             return redirect()->back()->with('error', 'Hanya Super Admin yang dapat mengunduh laporan.');
         }
@@ -79,22 +75,15 @@ class AdminController extends Controller
         $namaFile = 'Rekap_Pendaftar_PSB_' . date('Y-m-d') . '.xlsx';
         return Excel::download(new RegistrationsExport, $namaFile);
     }
-    // Tambahkan di bagian atas:
 
-    // ... di dalam class AdminController ...
-
-    // 1. Tampilan Pengaturan Sistem
     public function settings()
     {
-        // Ambil semua data setting dan jadikan array agar mudah dibaca di view
         $settings = Setting::pluck('value', 'key')->toArray();
         return view('admin.settings', compact('settings'));
     }
 
-    // 2. Simpan Pengaturan
     public function updateSettings(Request $request)
     {
-        // Ambil semua input kecuali token CSRF
         $data = $request->except('_token');
 
         foreach ($data as $key => $value) {
@@ -107,10 +96,8 @@ class AdminController extends Controller
         return redirect()->back()->with('success', 'Pengaturan sistem berhasil diperbarui!');
     }
 
-    // 3. Tampilan Manajemen Panitia
     public function manageAdmins()
     {
-        // Ambil semua user kecuali diri sendiri, urutkan berdasarkan nama
         $users = User::where('id', '!=', Auth::user()->id)
                      ->orderBy('name', 'asc')
                      ->get();
@@ -118,13 +105,9 @@ class AdminController extends Controller
         return view('admin.manage-admins', compact('users'));
     }
 
-    // 4. Ubah Role (Admin <=> Santri)
-    // Tambahkan kata 'string' sebelum $id
     public function toggleRole(string $id)
     {
         $user = User::findOrFail($id);
-        
-        // Balikkan role: jika admin jadi santri, jika santri jadi admin
         $user->role = ($user->role === 'admin') ? 'santri' : 'admin';
         $user->save();
 
