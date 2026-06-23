@@ -73,6 +73,7 @@
                         'bpjs' => ['label' => 'Kartu BPJS / KIS (Opsional)', 'format' => 'Format: JPG, PNG, atau PDF (Maks. 2MB)'],
                         'ktp' => ['label' => 'KTP Orang Tua / Wali', 'format' => 'Format: JPG, PNG, atau PDF (Maks. 2MB)'],
                         'pas_foto' => ['label' => 'Pas Foto (Berlatar Merah)', 'format' => 'Format: HANYA JPG atau PNG (Maks. 2MB)'],
+                        'transkrip_nilai' => ['label' => 'Transkrip Nilai', 'format' => 'Format: JPG, PNG, atau PDF (Maks. 2MB)'],
                     ];
                 @endphp
 

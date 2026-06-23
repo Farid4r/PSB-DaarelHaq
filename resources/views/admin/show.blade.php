@@ -1,7 +1,6 @@
 <x-admin-layout>
     <div class="flex-1 p-8 lg:p-12 overflow-y-auto">
           
-        <!-- HEADER BAGIAN ATAS -->
         <div class="flex flex-wrap items-center justify-between gap-4 mb-8 border-b border-surface-container pb-6">
             <div>
                 <a href="{{ route('admin.dashboard') }}" class="text-sm font-bold text-on-surface/40 hover:text-primary mb-2 inline-flex items-center gap-2">
@@ -11,7 +10,6 @@
                 <p class="text-on-surface/60">No. Daftar: <span class="font-bold text-primary">{{ $registration->registration_number }}</span></p>
             </div>
             
-            <!-- Badge Status Sesuai Bahasa Manusia -->
             <div class="bg-white p-4 rounded-xl border border-surface-container shadow-sm flex items-center gap-4">
                 <span class="text-sm font-bold text-on-surface/60">Status Saat Ini:</span>
                 @php
@@ -33,37 +31,98 @@
 
         <div class="grid lg:grid-cols-3 gap-8">
             
-            <!-- KOLOM KIRI (BIODATA & AKSI KEPUTUSAN) -->
             <div class="lg:col-span-1 space-y-6">
                 
-                <!-- Kartu Biodata -->
-                <div class="bg-white p-6 rounded-2xl border border-surface-container shadow-sm">
-                    <h3 class="font-display font-bold text-primary text-lg mb-4 border-b pb-2">Biodata Santri</h3>
-                    <div class="space-y-4">
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6">
+                    <h2 class="font-bold text-lg text-gray-800 mb-5">Data Santri Lengkap</h2>
+                    
+                    <div class="space-y-4 max-h-[600px] overflow-y-auto pr-2">
                         <div>
-                            <p class="text-xs font-bold text-on-surface/40 uppercase">Nama Lengkap</p>
-                            <p class="font-bold text-primary">{{ $registration->full_name ?? $registration->user->name }}</p>
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Nama Lengkap & Panggilan</p>
+                            <p class="font-bold text-gray-800">{{ $registration->full_name }} <span class="font-normal text-gray-500">({{ $registration->nickname }})</span></p>
                         </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Jenjang</p>
+                                <p class="font-bold text-gray-800">{{ $registration->level }}</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Jenis Kelamin</p>
+                                <p class="font-bold text-gray-800">{{ $registration->gender == 'L' ? 'Laki-Laki' : 'Perempuan' }}</p>
+                            </div>
+                        </div>
+
                         <div>
-                            <p class="text-xs font-bold text-on-surface/40 uppercase">Jenjang</p>
-                            <p class="font-bold text-primary">{{ $registration->level }}</p>
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Tempat, Tanggal Lahir</p>
+                            <p class="font-bold text-gray-800">{{ $registration->place_of_birth }}, {{ \Carbon\Carbon::parse($registration->date_of_birth)->translatedFormat('d F Y') }}</p>
                         </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Asal Sekolah</p>
+                                <p class="font-bold text-gray-800">{{ $registration->previous_school_name }}</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Alamat Sekolah</p>
+                                <p class="font-bold text-gray-800">{{ $registration->previous_school_address }}</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">NISN</p>
+                                <p class="font-bold text-gray-800">{{ $registration->nisn }}</p>
+                            </div>
+                        </div>
+
                         <div>
-                            <p class="text-xs font-bold text-on-surface/40 uppercase">Asal Sekolah</p>
-                            <p class="font-bold text-primary">{{ $registration->previous_school_name ?? '-' }}</p>
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Nomor Ijazah</p>
+                            <p class="font-bold {{ $registration->nomor_ijazah ? 'text-gray-800' : 'text-red-500 italic text-sm' }}">
+                                {{ $registration->nomor_ijazah ?: 'Belum diisi (Opsional)' }}
+                            </p>
                         </div>
-                        <div>
-                            <p class="text-xs font-bold text-on-surface/40 uppercase">NISN</p>
-                            <p class="font-bold text-primary">{{ $registration->nisn ?? '-' }}</p>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Anak Ke</p>
+                                <p class="font-bold text-gray-800">{{ $registration->child_order }} dari {{ $registration->siblings_count }}</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">No. KIP</p>
+                                <p class="font-bold text-gray-800">{{ $registration->kip_number ?: '-' }}</p>
+                            </div>
                         </div>
-                        <div>
-                            <p class="text-xs font-bold text-on-surface/40 uppercase">No. WhatsApp</p>
-                            <p class="font-bold text-primary">{{ $registration->user->phone }}</p>
-                        </div>
+
+                        <hr class="border-dashed border-gray-200 my-4">
+
+                         <h2 class="font-bold text-lg text-gray-800 mb-5">Data Orang Tua / Wali</h2>
+                        
+                        @if($registration->parentDetail)
+                            <div>
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Nama Ayah (Pekerjaan)</p>
+                                <p class="font-bold text-gray-800">{{ $registration->parentDetail->father_name }} <span class="font-normal text-gray-500">({{ $registration->parentDetail->father_occupation }})</span></p>
+                            </div>
+
+                            <div>
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Nama Ibu (Pekerjaan)</p>
+                                <p class="font-bold text-gray-800">{{ $registration->parentDetail->mother_name }} <span class="font-normal text-gray-500">({{ $registration->parentDetail->mother_occupation }})</span></p>
+                            </div>
+
+                            <div>
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">No. WhatsApp Wali</p>
+                                <p class="font-bold text-green-700">{{ $registration->parentDetail->father_phone }}</p>
+                            </div>
+
+                            <div>
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Alamat Domisili</p>
+                                <p class="font-bold text-gray-800 text-sm leading-relaxed">{{ $registration->parentDetail->address }}</p>
+                            </div>
+                        @else
+                            <div class="bg-red-50 text-red-500 text-xs p-3 rounded-lg border border-red-100">
+                                Data orang tua belum dilengkapi oleh santri.
+                            </div>
+                        @endif
                     </div>
                 </div>
 
-                <!-- FORM AKSI KEPUTUSAN ADMIN (SINKRON DENGAN ENUM DATABASE) -->
                 <div class="bg-white p-6 rounded-2xl border border-surface-container shadow-sm">
                     <h3 class="font-display font-bold text-primary text-lg mb-4 border-b pb-2">Keputusan Admin</h3>
                     
@@ -73,24 +132,14 @@
                         <div class="mb-4">
                             <label class="block text-xs font-bold text-on-surface/40 uppercase mb-2">Pilih Keputusan</label>
                             <select name="status" id="statusSelect" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-primary focus:ring focus:ring-primary/20 text-sm">
-                                <!-- pending = Menunggu antrean pemeriksaan -->
                                 <option value="pending" {{ $registration->status == 'pending' ? 'selected' : '' }}>Menunggu Verifikasi Berkas</option>
-                                
-                                <!-- paid = Berkas disetujui, tombol Midtrans aktif di santri -->
                                 <option value="paid" {{ $registration->status == 'paid' ? 'selected' : '' }}>Setujui Berkas (Valid)</option>
-                                
-                                <!-- rejected = Digunakan untuk menu revisi berkas -->
                                 <option value="rejected" {{ ($registration->status == 'rejected' && !empty($registration->admin_note)) ? 'selected' : '' }} data-type="revision">Revisi Berkas (Tidak Valid)</option>
-                                
-                                <!-- accepted = Untuk meluluskan tes seleksi akhir pondok -->
                                 <option value="accepted" {{ $registration->status == 'accepted' ? 'selected' : '' }}>Nyatakan Lulus Seleksi Akhir</option>
-                                
-                                <!-- rejected = Jika diisi tanpa catatan, artinya tidak lulus mutlak -->
                                 <option value="rejected" {{ ($registration->status == 'rejected' && empty($registration->admin_note)) ? 'selected' : '' }} data-type="reject_final">Tolak Permanen (Tidak Lulus)</option>
                             </select>
                         </div>
 
-                        <!-- Kotak Catatan (Otomatis muncul jika opsi 'Revisi Berkas' dipilih) -->
                         <div id="noteContainer" class="mb-6 {{ ($registration->status == 'rejected' && !empty($registration->admin_note)) ? 'block' : 'hidden' }}">
                             <div class="bg-red-50 border-l-4 border-red-500 p-3 rounded-r-lg">
                                 <label class="block text-xs font-bold text-red-700 uppercase mb-1">Catatan Koreksi Berkas</label>
@@ -106,7 +155,6 @@
                 </div>
             </div>
 
-            <!-- KOLOM KANAN (PENGECEKAN DOKUMEN) -->
             <div class="lg:col-span-2">
                 <div class="bg-white p-6 rounded-2xl border border-surface-container shadow-sm">
                     <h3 class="font-display font-bold text-primary text-lg mb-6 border-b pb-2">Pengecekan Dokumen</h3>
@@ -148,7 +196,6 @@
     </div>
 </div>
 
-<!-- SCRIPT ADAPTIF UNTUK MENAMPILKAN KOTAK TEKS REVISI -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const statusSelect = document.getElementById('statusSelect');
@@ -156,17 +203,14 @@
         const adminNoteTextarea = document.getElementById('adminNoteTextarea');
 
         statusSelect.addEventListener('change', function() {
-            // Ambil elemen option yang sedang aktif dipilih
             const selectedOption = this.options[this.selectedIndex];
             const dataType = selectedOption.getAttribute('data-type');
 
             if (this.value === 'rejected' && dataType === 'revision') {
-                // Tampilkan kotak teks jika opsi "Revisi Berkas" dipilih
                 noteContainer.classList.remove('hidden');
                 noteContainer.classList.add('block');
-                adminNoteTextarea.setAttribute('required', 'required'); // Menjaga admin agar tidak mengosongkan catatan revisi
+                adminNoteTextarea.setAttribute('required', 'required'); 
             } else {
-                // Sembunyikan kotak teks untuk status lain
                 noteContainer.classList.remove('block');
                 noteContainer.classList.add('hidden');
                 adminNoteTextarea.removeAttribute('required');

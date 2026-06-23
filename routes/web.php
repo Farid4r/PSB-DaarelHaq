@@ -75,7 +75,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     
     // --- FITUR BERSAMA (Bisa diakses Admin & Super Admin) ---
-    
+    // Route::get('/admin/pendaftar/{id}/detail', [\App\Http\Controllers\AdminController::class, 'showDetail'])->name('admin.pendaftar.detail');
     // Rute Dashboard Admin
     Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
     

@@ -30,12 +30,10 @@ class RegistrationController extends Controller
         $academicYear = Setting::get('academic_year', '2026/2027');
 
         // --- LOGIKA PEMBAYARAN MIDTRANS ---
-        // Sesuai Flow: Tombol bayar baru dipicu jika status sudah 'paid' (Berkas Valid)
         if ($registration->status === 'paid' && empty($registration->snap_token)) {
             
             $fee = (int) Setting::get('registration_fee', 150000);
 
-            // Konfigurasi Midtrans
             Config::$serverKey = config('midtrans.server_key') ?? config('services.midtrans.serverKey') ?? env('MIDTRANS_SERVER_KEY');
             Config::$isProduction = config('midtrans.is_production') ?? config('services.midtrans.isProduction') ?? env('MIDTRANS_IS_PRODUCTION', false);
             Config::$isSanitized = true;
@@ -43,7 +41,6 @@ class RegistrationController extends Controller
 
             $params = [
                 'transaction_details' => [
-                    // Menggunakan pemisah karakter 'T' agar aman dari pemecahan string order_id
                     'order_id' => 'PAY-' . $registration->registration_number . 'T' . time(), 
                     'gross_amount' => $fee, 
                 ],
@@ -90,7 +87,10 @@ class RegistrationController extends Controller
             'kip_number' => 'nullable|string', 
             'previous_school_name' => 'required|string|max:255',
             'previous_school_address' => 'required|string',
-            'nisn' => 'required|numeric|digits:10', 
+            'nisn' => 'required|numeric|digits:10',
+            
+            // FITUR BARU: Nomor Ijazah (dibuat nullable agar santri lulusan baru yang belum punya ijazah tetap bisa daftar)
+            'nomor_ijazah' => 'nullable|string|max:255',
         ]);
 
         Registration::updateOrCreate(
@@ -144,7 +144,6 @@ class RegistrationController extends Controller
             return redirect()->route('register.step1');
         }
 
-        // Akses dibuka jika baru melengkapi (pending) atau sedang diperintahkan revisi (rejected dengan catatan)
         $isRevision = ($registration->status === 'rejected' && !empty($registration->admin_note));
         if ($registration->status !== 'pending' && !$isRevision) {
             return redirect()->route('dashboard')->with('error', 'Anda tidak dapat mengubah berkas pada tahap ini.');
@@ -163,17 +162,24 @@ class RegistrationController extends Controller
         $hasBpjs = $registration->documents()->where('type', 'bpjs')->exists();
         $hasKtp = $registration->documents()->where('type', 'ktp')->exists();
         $hasPasFoto = $registration->documents()->where('type', 'pas_foto')->exists();
+        
+        // FITUR BARU: Deteksi Transkrip Nilai
+        $hasTranskrip = $registration->documents()->where('type', 'transkrip_nilai')->exists();
 
         $request->validate([
             'ijazah' => ($hasIjazah ? 'nullable' : 'required') . '|mimes:pdf,jpg,jpeg,png|max:2048',
             'kk' => ($hasKK ? 'nullable' : 'required') . '|mimes:pdf,jpg,jpeg,png|max:2048',
             'akta' => ($hasAkta ? 'nullable' : 'required') . '|mimes:pdf,jpg,jpeg,png|max:2048',
-            'bpjs' => ($hasBpjs ? 'nullable' : 'required') . '|mimes:pdf,jpg,jpeg,png|max:2048',
+            'bpjs' => 'nullable|mimes:pdf,jpg,jpeg,png|max:2048', // FIX BUG: BPJS kembali opsional murni
             'ktp' => ($hasKtp ? 'nullable' : 'required') . '|mimes:pdf,jpg,jpeg,png|max:2048',
             'pas_foto' => ($hasPasFoto ? 'nullable' : 'required') . '|mimes:jpg,jpeg,png|max:2048',
+            
+            // FITUR BARU: Validasi Transkrip Nilai
+            'transkrip_nilai' => ($hasTranskrip ? 'nullable' : 'required') . '|mimes:pdf,jpg,jpeg,png|max:2048',
         ]);
 
-        $types = ['ijazah', 'kk', 'akta', 'bpjs', 'ktp', 'pas_foto'];
+        // FITUR BARU: Menambahkan 'transkrip_nilai' ke dalam array pemroses unggahan
+        $types = ['ijazah', 'kk', 'akta', 'bpjs', 'ktp', 'pas_foto', 'transkrip_nilai'];
 
         foreach ($types as $type) {
             if ($request->hasFile($type)) {
@@ -193,10 +199,9 @@ class RegistrationController extends Controller
             }
         }
 
-        // Sesuai Flow: Selesai upload pendaftaran baru atau revisi otomatis status kembali ke 'pending' (Menunggu Verifikasi)
         if ($registration->status === 'pending' || $registration->status === 'rejected') {
             $registration->status = 'pending';
-            $registration->admin_note = null; // Reset catatan panitia
+            $registration->admin_note = null; 
             $registration->save();
 
             return redirect()->route('dashboard')->with('success', 'Berkas berhasil diajukan. Silakan tunggu proses verifikasi dari panitia.');
@@ -220,7 +225,6 @@ class RegistrationController extends Controller
 
         if ($request->transaction_status == 'capture' || $request->transaction_status == 'settlement') {
             
-            // Memotong order_id berdasarkan karakter 'T' yang dijamin aman
             $parts = explode('T', $request->order_id); 
             $orderClean = $parts[0];
             $registrationNumber = str_replace('PAY-', '', $orderClean);
@@ -228,7 +232,6 @@ class RegistrationController extends Controller
             $registration = Registration::where('registration_number', $registrationNumber)->first();
             
             if ($registration) {
-                // Sesuai Flow: Pembayaran Lunas -> Status naik ke 'verified' (Tombol Cetak Kartu Muncul)
                 $registration->status = 'verified';
                 $registration->save();
                 
@@ -247,12 +250,10 @@ class RegistrationController extends Controller
                         ->with(['parentDetail', 'documents'])
                         ->first();
 
-        // Keamanan: Cetak kartu hanya bisa diakses jika sudah lunas (verified) atau lulus seleksi akhir (accepted)
         if (!$registration || !in_array($registration->status, ['verified', 'accepted'])) {
             return redirect()->route('dashboard')->with('error', 'Akses ditolak! Anda belum menyelesaikan pembayaran pendaftaran.');
         }
 
-        // --- AMAN HOSTING: MENGKONSUMSI GAMBAR DENGAN FORMAT BASE64 UNTUK DOMPDF ---
         $fotoBase64 = null;
         $pasFoto = $registration->documents->where('type', 'pas_foto')->first();
         if ($pasFoto && file_exists(public_path('storage/' . $pasFoto->file_path))) {

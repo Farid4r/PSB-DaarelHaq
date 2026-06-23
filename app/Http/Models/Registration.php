@@ -18,6 +18,7 @@ class Registration extends Model
     'previous_school_name',
     'previous_school_address',
     'nisn',
+    'nomor_ijazah',
     // ---------------------
     'level',
     'place_of_birth',
