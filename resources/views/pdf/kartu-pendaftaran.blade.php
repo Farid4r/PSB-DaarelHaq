@@ -110,7 +110,8 @@
 <table style="width: 100%; border-bottom: 3px solid #065F46; padding-bottom: 10px; margin-bottom: 2px;">
         <tr>
             <td style="width: 15%; text-align: left; vertical-align: middle;">
-                @if($logoPath && file_exists($logoPath))
+                <!-- UBAH: Cek langsung isi variabelnya, tidak perlu menggunakan file_exists -->
+                @if($logoPath)
                     <img src="{{ $logoPath }}" style="width: 80px; height: auto;">
                 @else
                     <div style="width: 70px; height: 70px; background-color: #eee; border: 1px solid #ccc; line-height: 70px; text-align: center; font-size: 10px;">
@@ -148,7 +149,8 @@
             <td class="td-isi"><strong>{{ $registration->full_name ?? $user->name }}</strong></td>
             <td rowspan="8" class="td-foto">
                 <div class="kotak-foto">
-                    @if($fotoPath && file_exists($fotoPath))
+                    <!-- UBAH: Cek langsung variabel fotoPath tanpa file_exists -->
+                    @if($fotoPath)
                         <img src="{{ $fotoPath }}" alt="Pas Foto">
                     @else
                         <div style="text-align:center; padding-top:60px; color:#aaa;">3 x 4</div>

@@ -1,48 +1,60 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers;
 
-
-use App\Http\Controllers\Controller;
+use App\Http\Requests\ProfileUpdateRequest;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use App\Models\Setting;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
     /**
-     * Menampilkan halaman form edit profil pondok.
+     * Display the user's profile form.
      */
-    public function edit()
+    public function edit(Request $request): View
     {
-        // Mengambil data dari tabel settings berdasarkan 'key'
-        // Jika data belum ada di database, kita beri nilai kosong ('')
-        $tentangKami = Setting::where('key', 'tentang_kami')->value('value') ?? '';
-        $visi = Setting::where('key', 'visi')->value('value') ?? '';
-        $misi = Setting::where('key', 'misi')->value('value') ?? '';
-
-        // Mengirim data tersebut ke file tampilan (Blade)
-        return view('admin.profil.edit', compact('tentangKami', 'visi', 'misi'));
+        return view('profile.edit', [
+            'user' => $request->user(),
+        ]);
     }
 
     /**
-     * Menyimpan perubahan teks profil ke database.
+     * Update the user's profile information.
      */
-    public function update(Request $request)
+    public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        // 1. Memastikan data yang dikirim tidak kosong (Validasi)
-        $request->validate([
-            'tentang_kami' => 'required|string',
-            'visi' => 'required|string',
-            'misi' => 'required|string',
+        $request->user()->fill($request->validated());
+
+        if ($request->user()->isDirty('email')) {
+            $request->user()->email_verified_at = null;
+        }
+
+        $request->user()->save();
+
+        return Redirect::route('profile.edit')->with('status', 'profile-updated');
+    }
+
+    /**
+     * Delete the user's account.
+     */
+    public function destroy(Request $request): RedirectResponse
+    {
+        $request->validateWithBag('userDeletion', [
+            'password' => ['required', 'current_password'],
         ]);
 
-        // 2. Menyimpan atau memperbarui data menggunakan updateOrCreate
-        // Ini sangat aman: Jika 'key' sudah ada, ia akan di-update. Jika belum, ia akan dibuat baru.
-        Setting::updateOrCreate(['key' => 'tentang_kami'], ['value' => $request->tentang_kami]);
-        Setting::updateOrCreate(['key' => 'visi'], ['value' => $request->visi]);
-        Setting::updateOrCreate(['key' => 'misi'], ['value' => $request->misi]);
+        $user = $request->user();
 
-        // 3. Mengembalikan admin ke halaman sebelumnya dengan pesan sukses
-        return redirect()->back()->with('success', 'Profil Pondok berhasil diperbarui!');
+        Auth::logout();
+
+        $user->delete();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return Redirect::to('/');
     }
 }

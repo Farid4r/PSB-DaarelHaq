@@ -33,6 +33,7 @@ Route::get('/berita/{slug}', [FrontController::class, 'detailBerita'])->name('be
 Route::get('/galeri', [FrontController::class, 'galeri'])->name('galeri.index');
 
 // Webhook Midtrans harus publik agar server Midtrans bisa mengirim data ke aplikasi kita
+// Rute lama kamu (Biarkan tetap ada untuk memproses status pembayaran di background)
 Route::post('/midtrans/callback', [RegistrationController::class, 'callback']);
 
 /*

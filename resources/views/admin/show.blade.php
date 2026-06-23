@@ -11,21 +11,32 @@
                 <p class="text-on-surface/60">No. Daftar: <span class="font-bold text-primary">{{ $registration->registration_number }}</span></p>
             </div>
             
-            <!-- Mengganti tombol dengan Badge Status Saat Ini -->
+            <!-- Badge Status Sesuai Bahasa Manusia -->
             <div class="bg-white p-4 rounded-xl border border-surface-container shadow-sm flex items-center gap-4">
                 <span class="text-sm font-bold text-on-surface/60">Status Saat Ini:</span>
-                <sp     an class="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg text-sm font-bold uppercase tracking-widest border border-gray-200">
-                    {{ $registration->status }}
-                </sp>
+                @php
+                    $isRevision = ($registration->status === 'rejected' && !empty($registration->admin_note));
+                    $statusLabelsAdmin = [
+                        'pending'  => 'Menunggu Verifikasi Berkas',
+                        'paid'     => 'Berkas Valid (Menunggu Pembayaran)',
+                        'verified' => 'Pembayaran Lunas',
+                        'accepted' => 'Lulus Seleksi Akhir',
+                        'rejected' => 'Tidak Lulus / Perlu Revisi'
+                    ];
+                    $displayLabel = $isRevision ? 'Perlu Revisi Berkas' : ($statusLabelsAdmin[$registration->status] ?? $registration->status);
+                @endphp
+                <span class="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg text-sm font-bold uppercase tracking-widest border border-gray-200">
+                    {{ $displayLabel }}
+                </span>
             </div>
         </div>
 
         <div class="grid lg:grid-cols-3 gap-8">
             
-            <!-- KOLOM KIRI (BIODATA & AKSI) -->
+            <!-- KOLOM KIRI (BIODATA & AKSI KEPUTUSAN) -->
             <div class="lg:col-span-1 space-y-6">
                 
-                <!-- Kartu Biodata (Kode Aslimu) -->
+                <!-- Kartu Biodata -->
                 <div class="bg-white p-6 rounded-2xl border border-surface-container shadow-sm">
                     <h3 class="font-display font-bold text-primary text-lg mb-4 border-b pb-2">Biodata Santri</h3>
                     <div class="space-y-4">
@@ -52,7 +63,7 @@
                     </div>
                 </div>
 
-                <!-- KARTU BARU: FORM AKSI & REVISI -->
+                <!-- FORM AKSI KEPUTUSAN ADMIN (SINKRON DENGAN ENUM DATABASE) -->
                 <div class="bg-white p-6 rounded-2xl border border-surface-container shadow-sm">
                     <h3 class="font-display font-bold text-primary text-lg mb-4 border-b pb-2">Keputusan Admin</h3>
                     
@@ -60,22 +71,31 @@
                         @csrf
                         
                         <div class="mb-4">
-                            <label class="block text-xs font-bold text-on-surface/40 uppercase mb-2">Pilih Status Baru</label>
+                            <label class="block text-xs font-bold text-on-surface/40 uppercase mb-2">Pilih Keputusan</label>
                             <select name="status" id="statusSelect" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-primary focus:ring focus:ring-primary/20 text-sm">
-                                <option value="paid" {{ $registration->status == 'paid' ? 'selected' : '' }}>Menunggu Verifikasi</option>
-                                <option value="verified" {{ $registration->status == 'verified' ? 'selected' : '' }}>Validasi Berkas (Valid)</option>
-                                <option value="revision" {{ $registration->status == 'revision' ? 'selected' : '' }}>Revisi Berkas (Tidak Valid)</option>
-                                <option value="accepted" {{ $registration->status == 'accepted' ? 'selected' : '' }}>Luluskan</option>
-                                <option value="rejected" {{ $registration->status == 'rejected' ? 'selected' : '' }}>Tolak</option>
+                                <!-- pending = Menunggu antrean pemeriksaan -->
+                                <option value="pending" {{ $registration->status == 'pending' ? 'selected' : '' }}>Menunggu Verifikasi Berkas</option>
+                                
+                                <!-- paid = Berkas disetujui, tombol Midtrans aktif di santri -->
+                                <option value="paid" {{ $registration->status == 'paid' ? 'selected' : '' }}>Setujui Berkas (Valid)</option>
+                                
+                                <!-- rejected = Digunakan untuk menu revisi berkas -->
+                                <option value="rejected" {{ ($registration->status == 'rejected' && !empty($registration->admin_note)) ? 'selected' : '' }} data-type="revision">Revisi Berkas (Tidak Valid)</option>
+                                
+                                <!-- accepted = Untuk meluluskan tes seleksi akhir pondok -->
+                                <option value="accepted" {{ $registration->status == 'accepted' ? 'selected' : '' }}>Nyatakan Lulus Seleksi Akhir</option>
+                                
+                                <!-- rejected = Jika diisi tanpa catatan, artinya tidak lulus mutlak -->
+                                <option value="rejected" {{ ($registration->status == 'rejected' && empty($registration->admin_note)) ? 'selected' : '' }} data-type="reject_final">Tolak Permanen (Tidak Lulus)</option>
                             </select>
                         </div>
 
-                        <!-- Kotak Catatan (Hanya muncul jika 'revision' dipilih) -->
-                        <div id="noteContainer" class="mb-6 {{ $registration->status == 'revision' ? 'block' : 'hidden' }}">
+                        <!-- Kotak Catatan (Otomatis muncul jika opsi 'Revisi Berkas' dipilih) -->
+                        <div id="noteContainer" class="mb-6 {{ ($registration->status == 'rejected' && !empty($registration->admin_note)) ? 'block' : 'hidden' }}">
                             <div class="bg-red-50 border-l-4 border-red-500 p-3 rounded-r-lg">
-                                <label class="block text-xs font-bold text-red-700 uppercase mb-1">Catatan Revisi</label>
-                                <p class="text-[10px] text-red-600 mb-2 leading-tight">Beritahu santri berkas mana yang harus diperbaiki/diunggah ulang.</p>
-                                <textarea name="admin_note" rows="3" class="w-full border-red-300 rounded-lg shadow-sm focus:border-red-500 focus:ring focus:ring-red-500/20 text-sm" placeholder="Contoh: Pas foto kurang jelas, KTP blur...">{{ $registration->admin_note }}</textarea>
+                                <label class="block text-xs font-bold text-red-700 uppercase mb-1">Catatan Koreksi Berkas</label>
+                                <p class="text-[10px] text-red-600 mb-2 leading-tight">Wajib ditulis agar santri tahu dokumen mana yang wajib diunggah ulang.</p>
+                                <textarea name="admin_note" id="adminNoteTextarea" rows="3" class="w-full border-red-300 rounded-lg shadow-sm focus:border-red-500 focus:ring focus:ring-red-500/20 text-sm" placeholder="Contoh: Foto kartu keluarga buram, tolong upload ulang berkas asli...">{{ $registration->admin_note }}</textarea>
                             </div>
                         </div>
 
@@ -86,7 +106,7 @@
                 </div>
             </div>
 
-            <!-- KOLOM KANAN (DOKUMEN) -->
+            <!-- KOLOM KANAN (PENGECEKAN DOKUMEN) -->
             <div class="lg:col-span-2">
                 <div class="bg-white p-6 rounded-2xl border border-surface-container shadow-sm">
                     <h3 class="font-display font-bold text-primary text-lg mb-6 border-b pb-2">Pengecekan Dokumen</h3>
@@ -111,7 +131,7 @@
                                         </div>
                                     @endif
                                     
-                                    <a href="{{ asset('storage/' . $doc->file_path) }}" target="_blank" class="absolute inset-0 bg-primary/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <a href="{{ asset('storage/' . $doc->file_path) }}" target="_blank" class="absolute inset-0 bg-primary/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                         <svg class="w-8 h-8 text-white mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                         <span class="bg-white text-primary text-[10px] font-bold px-3 py-1 rounded-full">LIHAT FULL</span>
                                     </a>
@@ -128,21 +148,28 @@
     </div>
 </div>
 
-<!-- SCRIPT UNTUK INTERAKSI FORM REVISI -->
+<!-- SCRIPT ADAPTIF UNTUK MENAMPILKAN KOTAK TEKS REVISI -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const statusSelect = document.getElementById('statusSelect');
         const noteContainer = document.getElementById('noteContainer');
+        const adminNoteTextarea = document.getElementById('adminNoteTextarea');
 
         statusSelect.addEventListener('change', function() {
-            if (this.value === 'revision') {
-                // Tampilkan kotak teks jika Revisi dipilih
+            // Ambil elemen option yang sedang aktif dipilih
+            const selectedOption = this.options[this.selectedIndex];
+            const dataType = selectedOption.getAttribute('data-type');
+
+            if (this.value === 'rejected' && dataType === 'revision') {
+                // Tampilkan kotak teks jika opsi "Revisi Berkas" dipilih
                 noteContainer.classList.remove('hidden');
                 noteContainer.classList.add('block');
+                adminNoteTextarea.setAttribute('required', 'required'); // Menjaga admin agar tidak mengosongkan catatan revisi
             } else {
                 // Sembunyikan kotak teks untuk status lain
                 noteContainer.classList.remove('block');
                 noteContainer.classList.add('hidden');
+                adminNoteTextarea.removeAttribute('required');
             }
         });
     });

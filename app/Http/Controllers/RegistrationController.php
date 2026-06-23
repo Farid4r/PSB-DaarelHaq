@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Registration;
 use App\Models\ParentDetail;
 use App\Models\Document;
-use App\Models\Setting; // Pastikan ini terpanggil
+use App\Models\Setting; 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
@@ -27,24 +27,24 @@ class RegistrationController extends Controller
             return redirect()->route('register.step1');
         }
 
-        // Ambil pengaturan tahun ajaran untuk ditampilkan di view
         $academicYear = Setting::get('academic_year', '2026/2027');
 
         // --- LOGIKA PEMBAYARAN MIDTRANS ---
-        if ($registration->status === 'pending' && empty($registration->snap_token)) {
+        // Sesuai Flow: Tombol bayar baru dipicu jika status sudah 'paid' (Berkas Valid)
+        if ($registration->status === 'paid' && empty($registration->snap_token)) {
             
-            // AMBIL BIAYA DARI SETTING (Default ke 150000 jika kosong)
             $fee = (int) Setting::get('registration_fee', 150000);
 
             // Konfigurasi Midtrans
-            Config::$serverKey = config('midtrans.server_key') ?? config('services.midtrans.serverKey');
-            Config::$isProduction = config('midtrans.is_production') ?? config('services.midtrans.isProduction');
+            Config::$serverKey = config('midtrans.server_key') ?? config('services.midtrans.serverKey') ?? env('MIDTRANS_SERVER_KEY');
+            Config::$isProduction = config('midtrans.is_production') ?? config('services.midtrans.isProduction') ?? env('MIDTRANS_IS_PRODUCTION', false);
             Config::$isSanitized = true;
             Config::$is3ds = true;
 
             $params = [
                 'transaction_details' => [
-                    'order_id' => $registration->registration_number . '-' . time(), 
+                    // Menggunakan pemisah karakter 'T' agar aman dari pemecahan string order_id
+                    'order_id' => 'PAY-' . $registration->registration_number . 'T' . time(), 
                     'gross_amount' => $fee, 
                 ],
                 'customer_details' => [
@@ -54,9 +54,13 @@ class RegistrationController extends Controller
                 ],
             ];
 
-            $snapToken = Snap::getSnapToken($params);
-            $registration->snap_token = $snapToken;
-            $registration->save();
+            try {
+                $snapToken = Snap::getSnapToken($params);
+                $registration->snap_token = $snapToken;
+                $registration->save();
+            } catch (\Exception $e) {
+                Log::error('Midtrans Error: ' . $e->getMessage());
+            }
         }
 
         return view('dashboard', compact('user', 'registration', 'academicYear'));
@@ -65,7 +69,6 @@ class RegistrationController extends Controller
     // --- STEP 1: Identitas Diri ---
     public function stepOne()
     {
-        // LOGIKA GATEKEEPER: Cek apakah pendaftaran dibuka/ditutup
         if (Setting::get('is_registration_open') == '0') {
             return redirect()->route('dashboard')->with('error', 'Mohon maaf, pendaftaran santri baru saat ini sedang ditutup.');
         }
@@ -137,12 +140,16 @@ class RegistrationController extends Controller
         $user = Auth::user();
         $registration = Registration::where('user_id', $user->id)->first();
 
-        // Jika statusnya BUKAN pending (belum selesai) DAN BUKAN revision (disuruh perbaiki), tendang kembali ke dashboard
-        if ($registration->status !== 'pending' && $registration->status !== 'revision') {
+        if (!$registration) {
+            return redirect()->route('register.step1');
+        }
+
+        // Akses dibuka jika baru melengkapi (pending) atau sedang diperintahkan revisi (rejected dengan catatan)
+        $isRevision = ($registration->status === 'rejected' && !empty($registration->admin_note));
+        if ($registration->status !== 'pending' && !$isRevision) {
             return redirect()->route('dashboard')->with('error', 'Anda tidak dapat mengubah berkas pada tahap ini.');
         }
 
-        // Pastikan kita mengembalikan view untuk form step 3
         return view('pendaftaran.step3', compact('registration'));
     }
 
@@ -168,7 +175,6 @@ class RegistrationController extends Controller
 
         $types = ['ijazah', 'kk', 'akta', 'bpjs', 'ktp', 'pas_foto'];
 
-        // Proses penyimpanan file
         foreach ($types as $type) {
             if ($request->hasFile($type)) {
                 $oldDoc = Document::where('registration_id', $registration->id)->where('type', $type)->first();
@@ -187,19 +193,16 @@ class RegistrationController extends Controller
             }
         }
 
-        // --- LOGIKA BARU: OTOMATISASI STATUS REVISI ---
-        if ($registration->status === 'revision') {
-            // Ubah status ke antrean verifikasi
-            $registration->status = 'paid';
-            // Bersihkan catatan admin
-            $registration->admin_note = null;
+        // Sesuai Flow: Selesai upload pendaftaran baru atau revisi otomatis status kembali ke 'pending' (Menunggu Verifikasi)
+        if ($registration->status === 'pending' || $registration->status === 'rejected') {
+            $registration->status = 'pending';
+            $registration->admin_note = null; // Reset catatan panitia
             $registration->save();
 
-            return redirect()->route('dashboard')->with('success', 'Berkas perbaikan berhasil diunggah. Silakan tunggu verifikasi ulang dari panitia.');
+            return redirect()->route('dashboard')->with('success', 'Berkas berhasil diajukan. Silakan tunggu proses verifikasi dari panitia.');
         }
 
-        // Jika pendaftar baru (status pending)
-        return redirect()->route('dashboard')->with('success', 'Pendaftaran Anda telah kami terima.');
+        return redirect()->route('dashboard');
     }
 
     // --- CALLBACK MIDTRANS ---
@@ -207,64 +210,79 @@ class RegistrationController extends Controller
     {
         Log::info('Webhook Midtrans Masuk:', $request->all());
 
-        $serverKey = config('midtrans.server_key') ?? config('services.midtrans.serverKey');
+        $serverKey = config('midtrans.server_key') ?? config('services.midtrans.serverKey') ?? env('MIDTRANS_SERVER_KEY');
         $hashed = hash("sha512", $request->order_id . $request->status_code . $request->gross_amount . $serverKey);
         
-        if ($hashed == $request->signature_key) {
-            if ($request->transaction_status == 'capture' || $request->transaction_status == 'settlement') {
-                $parts = explode('-', $request->order_id); 
-                array_pop($parts); 
-                $registrationNumber = implode('-', $parts);
+        if ($hashed !== $request->signature_key) {
+            Log::error("Signature key tidak cocok!");
+            return response()->json(['message' => 'Invalid signature'], 403);
+        }
+
+        if ($request->transaction_status == 'capture' || $request->transaction_status == 'settlement') {
+            
+            // Memotong order_id berdasarkan karakter 'T' yang dijamin aman
+            $parts = explode('T', $request->order_id); 
+            $orderClean = $parts[0];
+            $registrationNumber = str_replace('PAY-', '', $orderClean);
+            
+            $registration = Registration::where('registration_number', $registrationNumber)->first();
+            
+            if ($registration) {
+                // Sesuai Flow: Pembayaran Lunas -> Status naik ke 'verified' (Tombol Cetak Kartu Muncul)
+                $registration->status = 'verified';
+                $registration->save();
                 
-                $registration = Registration::where('registration_number', $registrationNumber)->first();
-                
-                if ($registration) {
-                    $registration->status = 'paid';
-                    $registration->save();
-                    Log::info("SUKSES: Pendaftaran " . $registrationNumber . " diubah jadi PAID");
-                }
+                Log::info("SUKSES: Pendaftaran " . $registrationNumber . " Lunas, status menjadi VERIFIED.");
+                return response()->json(['status' => 'success']);
             }
         }
         
         return response()->json(['message' => 'Callback processed']);
     }
+
     public function cetakKartu()
     {
         $user = Auth::user();
         $registration = Registration::where('user_id', $user->id)
-                    ->with(['parentDetail', 'documents'])
-                    ->first();
-    
-                    // 1. Cek keamanan: Kartu hanya bisa dicetak jika sudah diverifikasi/diterima
-                    if (!$registration || !in_array($registration->status, ['verified', 'accepted'])) {
-                        return redirect()->route('dashboard')->with('error', 'Mohon bersabar, Kartu Pendaftaran baru bisa dicetak setelah berkas divalidasi oleh Panitia.');
-                        }
-    
-                        // 2. Menyiapkan Path Foto Santri
-    $pasFoto = $registration->documents->where('type', 'pas_foto')->first();
-    $fotoPath = $pasFoto ? public_path('storage/' . $pasFoto->file_path) : null;
+                        ->with(['parentDetail', 'documents'])
+                        ->first();
 
-    // 3. Menyiapkan Path Logo Pondok (Krusial untuk DomPDF)
-    // Pastikan file logo-ponpes.png ada di folder public/assets/images/
-    $logoPath = public_path('assets/images/logo-ponpes.png');
+        // Keamanan: Cetak kartu hanya bisa diakses jika sudah lunas (verified) atau lulus seleksi akhir (accepted)
+        if (!$registration || !in_array($registration->status, ['verified', 'accepted'])) {
+            return redirect()->route('dashboard')->with('error', 'Akses ditolak! Anda belum menyelesaikan pembayaran pendaftaran.');
+        }
 
-    // 4. Menyusun data untuk dikirim ke View PDF
-    $data = [
-        'registration'    => $registration,
-        'user'            => $user,
-        'fotoPath'        => $fotoPath,
-        'logoPath'        => $logoPath, // Variabel baru untuk logo
-        'tanggalCetak'    => \Carbon\Carbon::now()->translatedFormat('d F Y'),
-        
-        // Mengambil dari model Setting (pastikan Model Setting sudah di-import di atas)
-        'academicYear'    => \App\Models\Setting::where('key', 'academic_year')->value('value') ?? '2026/2027',
-        'headOfCommittee' => \App\Models\Setting::where('key', 'head_of_committee')->value('value') ?? 'Ketua Panitia PSB'
-    ];
+        // --- AMAN HOSTING: MENGKONSUMSI GAMBAR DENGAN FORMAT BASE64 UNTUK DOMPDF ---
+        $fotoBase64 = null;
+        $pasFoto = $registration->documents->where('type', 'pas_foto')->first();
+        if ($pasFoto && file_exists(public_path('storage/' . $pasFoto->file_path))) {
+            $path = public_path('storage/' . $pasFoto->file_path);
+            $type = pathinfo($path, PATHINFO_EXTENSION);
+            $dataImg = file_get_contents($path);
+            $fotoBase64 = 'data:image/' . $type . ';base64,' . base64_encode($dataImg);
+        }
 
-    // 5. Generate PDF
-    $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.kartu-pendaftaran', $data);
-    $pdf->setPaper('A4', 'portrait'); 
+        $logoBase64 = null;
+        $logoFullPath = public_path('assets/images/logo-ponpes.png');
+        if (file_exists($logoFullPath)) {
+            $type = pathinfo($logoFullPath, PATHINFO_EXTENSION);
+            $dataImg = file_get_contents($logoFullPath);
+            $logoBase64 = 'data:image/' . $type . ';base64,' . base64_encode($dataImg);
+        }
 
-    return $pdf->stream('Kartu_Pendaftaran_' . $registration->registration_number . '.pdf');
-}
+        $data = [
+            'registration'    => $registration,
+            'user'            => $user,
+            'fotoPath'        => $fotoBase64,
+            'logoPath'        => $logoBase64, 
+            'tanggalCetak'    => \Carbon\Carbon::now()->translatedFormat('d F Y'),
+            'academicYear'    => Setting::get('academic_year', '2026/2027'),
+            'headOfCommittee' => Setting::get('head_of_committee', 'Ketua Panitia PSB')
+        ];
+
+        $pdf = Pdf::loadView('pdf.kartu-pendaftaran', $data);
+        $pdf->setPaper('A4', 'portrait'); 
+
+        return $pdf->stream('Kartu_Pendaftaran_' . $registration->registration_number . '.pdf');
+    }
 }
